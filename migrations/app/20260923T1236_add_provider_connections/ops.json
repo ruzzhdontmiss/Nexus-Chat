@@ -1,0 +1,164 @@
+[
+  {
+    "id": "table.providerConnection",
+    "label": "Create table \"providerConnection\"",
+    "summary": "Creates table \"providerConnection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "providerConnection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"providerConnection\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"providerConnection\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"providerConnection\"",
+        "sql": "CREATE TABLE \"public\".\"providerConnection\" (\n  \"authType\" text NOT NULL,\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"displayName\" text,\n  \"encryptedCredential\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"metadata\" text,\n  \"providerId\" text NOT NULL,\n  \"updatedAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"providerConnection\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"providerConnection\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.providerConnection.providerConnection_userId_providerId_key",
+    "label": "Add unique constraint on \"providerConnection\" (userId, providerId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "providerConnection_userId_providerId_key",
+        "table": "providerConnection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"providerConnection_userId_providerId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "providerConnection_userId_providerId_key",
+          "public",
+          "\"public\".\"providerConnection\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"providerConnection_userId_providerId_key\"",
+        "sql": "ALTER TABLE \"public\".\"providerConnection\" ADD CONSTRAINT \"providerConnection_userId_providerId_key\" UNIQUE (\"userId\", \"providerId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"providerConnection_userId_providerId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "providerConnection_userId_providerId_key",
+          "public",
+          "\"public\".\"providerConnection\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.providerConnection.providerConnection_userId_idx_a489d58a",
+    "label": "Create index \"providerConnection_userId_idx_a489d58a\" on \"providerConnection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "providerConnection_userId_idx_a489d58a",
+        "table": "providerConnection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"providerConnection_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"providerConnection_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"providerConnection_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"providerConnection_userId_idx_a489d58a\" ON \"public\".\"providerConnection\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"providerConnection_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"providerConnection_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.providerConnection.providerConnection_userId_fkey",
+    "label": "Add foreign key \"providerConnection_userId_fkey\" on \"providerConnection\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "providerConnection_userId_fkey",
+        "table": "providerConnection"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"providerConnection_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "providerConnection_userId_fkey",
+          "public",
+          "\"public\".\"providerConnection\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"providerConnection_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"providerConnection\"\nADD CONSTRAINT \"providerConnection_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"providerConnection_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "providerConnection_userId_fkey",
+          "public",
+          "\"public\".\"providerConnection\""
+        ]
+      }
+    ]
+  }
+]

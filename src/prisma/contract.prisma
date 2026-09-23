@@ -1,0 +1,60 @@
+// use prisma-8
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String?
+  createdAt     TimestamptzString(3) @default(now())
+  updatedAt     TimestamptzString(3) @default(now())
+  conversations Conversation[]
+  usageEvents   UsageEvent[]
+  providerConnections ProviderConnection[]
+}
+
+model Conversation {
+  id        String    @id @default(uuid())
+  title     String?
+  createdAt TimestamptzString(3) @default(now())
+  updatedAt TimestamptzString(3) @default(now())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  role           String       // 'user' | 'assistant' | 'system'
+  content        String
+  createdAt      TimestamptzString(3) @default(now())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model UsageEvent {
+  id           String       @id @default(uuid())
+  userId       String
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerId   String
+  modelId      String
+  accessType   String       // 'managed' | 'byok' | 'oauth'
+  inputTokens  Int?
+  outputTokens Int?
+  totalTokens  Int?
+  status       String       // 'success' | 'error' | 'rate_limited'
+  createdAt    TimestamptzString(3) @default(now())
+}
+
+model ProviderConnection {
+  id                  String   @id @default(uuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerId          String   // "mistral" | "openrouter" | "openai" | "anthropic" | ...
+  authType            String   // "api_key" | "oauth" | "managed"
+  displayName         String?  // user-facing label e.g. "My Mistral Key"
+  encryptedCredential String   // AES-256-GCM encrypted — never store plaintext
+  metadata            String?  // JSON blob for extra provider-specific info
+  createdAt           TimestamptzString(3) @default(now())
+  updatedAt           TimestamptzString(3) @default(now())
+
+  @@unique([userId, providerId])
+}

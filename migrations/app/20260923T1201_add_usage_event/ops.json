@@ -1,0 +1,122 @@
+[
+  {
+    "id": "table.usageEvent",
+    "label": "Create table \"usageEvent\"",
+    "summary": "Creates table \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"usageEvent\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"usageEvent\"",
+        "sql": "CREATE TABLE \"public\".\"usageEvent\" (\n  \"accessType\" text NOT NULL,\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"id\" text NOT NULL,\n  \"inputTokens\" int4,\n  \"modelId\" text NOT NULL,\n  \"outputTokens\" int4,\n  \"providerId\" text NOT NULL,\n  \"status\" text NOT NULL,\n  \"totalTokens\" int4,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"usageEvent\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageEvent\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.usageEvent.usageEvent_userId_idx_a489d58a",
+    "label": "Create index \"usageEvent_userId_idx_a489d58a\" on \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "usageEvent_userId_idx_a489d58a",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"usageEvent_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageEvent_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"usageEvent_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"usageEvent_userId_idx_a489d58a\" ON \"public\".\"usageEvent\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"usageEvent_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageEvent_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.usageEvent.usageEvent_userId_fkey",
+    "label": "Add foreign key \"usageEvent_userId_fkey\" on \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "usageEvent_userId_fkey",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"usageEvent_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usageEvent_userId_fkey",
+          "public",
+          "\"public\".\"usageEvent\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"usageEvent_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\"\nADD CONSTRAINT \"usageEvent_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"usageEvent_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usageEvent_userId_fkey",
+          "public",
+          "\"public\".\"usageEvent\""
+        ]
+      }
+    ]
+  }
+]
