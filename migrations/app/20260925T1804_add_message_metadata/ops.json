@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.message.metadata",
+    "label": "Add column \"metadata\" to \"message\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "metadata",
+        "table": "message"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"metadata\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "message",
+          "metadata"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"metadata\"",
+        "sql": "ALTER TABLE \"public\".\"message\" ADD COLUMN \"metadata\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"metadata\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "message",
+          "metadata"
+        ]
+      }
+    ]
+  }
+]

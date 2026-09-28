@@ -25,6 +25,7 @@ export type ResolvedModel = {
 
 /** Map of provider ID → env var name for Nexus-managed keys */
 const MANAGED_ENV_KEYS: Record<string, string> = {
+  groq: "GROQ_API_KEY",
   mistral: "MISTRAL_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
   openai: "OPENAI_API_KEY",

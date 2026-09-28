@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, MessageSquareIcon, SettingsIcon, PanelLeftIcon } from "lucide-react";
+import { PlusIcon, MessageSquareIcon, SettingsIcon, PanelLeftIcon, KeyRoundIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -83,7 +83,24 @@ export function Sidebar() {
         </div>
       </ScrollArea>
 
-      <div className="p-3 mt-auto border-t border-sidebar-border/50">
+      <div className="p-3 mt-auto border-t border-sidebar-border/50 space-y-1">
+        {session && (
+          collapsed ? (
+            <Tooltip>
+              <TooltipTrigger render={
+                <Link href="/providers" className={cn("flex items-center justify-center w-full h-10 rounded-md transition-colors", pathname === "/providers" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent")}>
+                  <KeyRoundIcon className="h-4 w-4" />
+                </Link>
+              } />
+              <TooltipContent side="right">AI Providers</TooltipContent>
+            </Tooltip>
+          ) : (
+            <Link href="/providers" className={cn("flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors", pathname === "/providers" ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent")}>
+              <KeyRoundIcon className="h-4 w-4 shrink-0" />
+              <span>AI Providers</span>
+            </Link>
+          )
+        )}
         {!session ? (
           <Button 
             variant="ghost" 

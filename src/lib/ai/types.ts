@@ -19,6 +19,13 @@ export type ModelRequest = {
 
 export type ModelChunk = {
   text: string;
+  metadata?: {
+    usage?: {
+      inputTokens?: number;
+      outputTokens?: number;
+      totalTokens?: number;
+    }
+  };
 };
 
 export type AuthMethod = "api_key" | "oauth" | "managed";

@@ -13,11 +13,23 @@ export default async function ChatPage({ params }: { params: Promise<{ id: strin
     notFound();
   }
 
-  const initialMessages: MessageType[] = conversation.messages.map((msg: any) => ({
-    id: msg.id,
-    role: msg.role as "user" | "assistant",
-    content: msg.content
-  }));
+  const initialMessages: MessageType[] = conversation.messages.map((msg: any) => {
+    let sources: MessageType["sources"];
+    if (msg.metadata) {
+      try {
+        const meta = JSON.parse(msg.metadata);
+        if (Array.isArray(meta.sources)) {
+          sources = meta.sources;
+        }
+      } catch { /* ignore malformed metadata */ }
+    }
+    return {
+      id: msg.id,
+      role: msg.role as "user" | "assistant",
+      content: msg.content,
+      ...(sources ? { sources } : {}),
+    };
+  });
 
   return <ChatInterface initialConversationId={id} initialMessages={initialMessages} />;
 }

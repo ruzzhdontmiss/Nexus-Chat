@@ -25,25 +25,54 @@ model Message {
   id             String       @id @default(uuid())
   role           String       // 'user' | 'assistant' | 'system'
   content        String
+  metadata       String?      // JSON blob for sources, tool results, etc.
   createdAt      TimestamptzString(3) @default(now())
   conversationId String
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 }
 
 model UsageEvent {
-  id           String       @id @default(uuid())
-  userId       String
-  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  providerId   String
-  modelId      String
-  accessType   String       // 'managed' | 'byok' | 'oauth'
-  inputTokens  Int?
-  outputTokens Int?
-  totalTokens  Int?
-  status       String       // 'success' | 'error' | 'rate_limited'
-  createdAt    TimestamptzString(3) @default(now())
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind           String       // "chat_request" | "search_request"
+  requestId      String?
+  providerId     String?
+  modelId        String?
+  conversationId String?
+  accessType     String?      // 'managed' | 'byok' | 'oauth'
+  inputTokens    Int?
+  outputTokens   Int?
+  totalTokens    Int?
+  durationMs     Int?
+  status         String       // "success" | "error" | "rate_limited" | "cancelled" | "rejected" | "pending"
+  metadata       String?
+  createdAt      TimestamptzString(3) @default(now())
 }
 
+model UsageQuota {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           String       // "YYYY-MM-DD" in UTC
+  chatRequests   Int          @default(0)
+  searchRequests Int          @default(0)
+  tokens         Int          @default(0)
+  updatedAt      TimestamptzString(3) @default(now())
+
+  @@unique([userId, date])
+}
+
+model RateLimit {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint       String       // "chat" | "search"
+  windowStart    TimestamptzString(3)
+  count          Int          @default(0)
+  
+  @@unique([userId, endpoint, windowStart])
+}
 model ProviderConnection {
   id                  String   @id @default(uuid())
   userId              String

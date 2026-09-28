@@ -1,6 +1,12 @@
 import { db } from "@/prisma/db";
 
-export async function createMessage(userId: string, conversationId: string, role: string, content: string) {
+export async function createMessage(
+  userId: string,
+  conversationId: string,
+  role: string,
+  content: string,
+  metadata?: string | null,
+) {
   // First ensure the conversation belongs to the user
   const conversation = await db.orm.public.Conversation.where({ id: conversationId, userId }).first();
 
@@ -12,6 +18,7 @@ export async function createMessage(userId: string, conversationId: string, role
     conversationId,
     role,
     content,
+    ...(metadata ? { metadata } : {}),
   });
 
   // Update conversation updatedAt

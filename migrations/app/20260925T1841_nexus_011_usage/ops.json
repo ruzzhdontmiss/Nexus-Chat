@@ -1,0 +1,665 @@
+[
+  {
+    "id": "table.rateLimit",
+    "label": "Create table \"rateLimit\"",
+    "summary": "Creates table \"rateLimit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "rateLimit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"rateLimit\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rateLimit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"rateLimit\"",
+        "sql": "CREATE TABLE \"public\".\"rateLimit\" (\n  \"count\" int4 DEFAULT 0 NOT NULL,\n  \"endpoint\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"userId\" text NOT NULL,\n  \"windowStart\" timestamptz(3) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"rateLimit\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rateLimit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.usageQuota",
+    "label": "Create table \"usageQuota\"",
+    "summary": "Creates table \"usageQuota\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "usageQuota"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"usageQuota\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageQuota\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"usageQuota\"",
+        "sql": "CREATE TABLE \"public\".\"usageQuota\" (\n  \"chatRequests\" int4 DEFAULT 0 NOT NULL,\n  \"date\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"searchRequests\" int4 DEFAULT 0 NOT NULL,\n  \"tokens\" int4 DEFAULT 0 NOT NULL,\n  \"updatedAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"usageQuota\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageQuota\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.usageEvent.conversationId",
+    "label": "Add column \"conversationId\" to \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "conversationId",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"conversationId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "conversationId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"conversationId\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ADD COLUMN \"conversationId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"conversationId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "conversationId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.usageEvent.durationMs",
+    "label": "Add column \"durationMs\" to \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "durationMs",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"durationMs\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "durationMs"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"durationMs\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ADD COLUMN \"durationMs\" int4"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"durationMs\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "durationMs"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.usageEvent.metadata",
+    "label": "Add column \"metadata\" to \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "metadata",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"metadata\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "metadata"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"metadata\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ADD COLUMN \"metadata\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"metadata\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "metadata"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.usageEvent.requestId",
+    "label": "Add column \"requestId\" to \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "requestId",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"requestId\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "requestId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"requestId\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ADD COLUMN \"requestId\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"requestId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "requestId"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.usageEvent.kind",
+    "label": "Add column \"kind\" to \"usageEvent\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "kind",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"kind\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "kind"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"kind\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ADD COLUMN \"kind\" text"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"kind\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "kind"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.usageEvent.accessType",
+    "label": "Drop NOT NULL on \"usageEvent\".\"accessType\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "accessType",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"accessType\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "accessType"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"accessType\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ALTER COLUMN \"accessType\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"accessType\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "accessType",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.usageEvent.modelId",
+    "label": "Drop NOT NULL on \"usageEvent\".\"modelId\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "modelId",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"modelId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "modelId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"modelId\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ALTER COLUMN \"modelId\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"modelId\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "modelId",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.dropNotNull.usageEvent.providerId",
+    "label": "Drop NOT NULL on \"usageEvent\".\"providerId\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "providerId",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"providerId\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "providerId"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop NOT NULL on \"providerId\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ALTER COLUMN \"providerId\" DROP NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"providerId\" is nullable",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "providerId",
+          "YES"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.rateLimit.rateLimit_userId_endpoint_windowStart_key",
+    "label": "Add unique constraint on \"rateLimit\" (userId, endpoint, windowStart)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "rateLimit_userId_endpoint_windowStart_key",
+        "table": "rateLimit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"rateLimit_userId_endpoint_windowStart_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rateLimit_userId_endpoint_windowStart_key",
+          "public",
+          "\"public\".\"rateLimit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"rateLimit_userId_endpoint_windowStart_key\"",
+        "sql": "ALTER TABLE \"public\".\"rateLimit\" ADD CONSTRAINT \"rateLimit_userId_endpoint_windowStart_key\" UNIQUE (\"userId\", \"endpoint\", \"windowStart\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"rateLimit_userId_endpoint_windowStart_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rateLimit_userId_endpoint_windowStart_key",
+          "public",
+          "\"public\".\"rateLimit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.usageQuota.usageQuota_userId_date_key",
+    "label": "Add unique constraint on \"usageQuota\" (userId, date)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "usageQuota_userId_date_key",
+        "table": "usageQuota"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"usageQuota_userId_date_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usageQuota_userId_date_key",
+          "public",
+          "\"public\".\"usageQuota\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"usageQuota_userId_date_key\"",
+        "sql": "ALTER TABLE \"public\".\"usageQuota\" ADD CONSTRAINT \"usageQuota_userId_date_key\" UNIQUE (\"userId\", \"date\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"usageQuota_userId_date_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usageQuota_userId_date_key",
+          "public",
+          "\"public\".\"usageQuota\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rateLimit.rateLimit_userId_idx_a489d58a",
+    "label": "Create index \"rateLimit_userId_idx_a489d58a\" on \"rateLimit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rateLimit_userId_idx_a489d58a",
+        "table": "rateLimit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rateLimit_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rateLimit_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rateLimit_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"rateLimit_userId_idx_a489d58a\" ON \"public\".\"rateLimit\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rateLimit_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rateLimit_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.usageQuota.usageQuota_userId_idx_a489d58a",
+    "label": "Create index \"usageQuota_userId_idx_a489d58a\" on \"usageQuota\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "usageQuota_userId_idx_a489d58a",
+        "table": "usageQuota"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"usageQuota_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageQuota_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"usageQuota_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"usageQuota_userId_idx_a489d58a\" ON \"public\".\"usageQuota\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"usageQuota_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usageQuota_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.rateLimit.rateLimit_userId_fkey",
+    "label": "Add foreign key \"rateLimit_userId_fkey\" on \"rateLimit\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "rateLimit_userId_fkey",
+        "table": "rateLimit"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"rateLimit_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rateLimit_userId_fkey",
+          "public",
+          "\"public\".\"rateLimit\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"rateLimit_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"rateLimit\"\nADD CONSTRAINT \"rateLimit_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"rateLimit_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "rateLimit_userId_fkey",
+          "public",
+          "\"public\".\"rateLimit\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.usageQuota.usageQuota_userId_fkey",
+    "label": "Add foreign key \"usageQuota_userId_fkey\" on \"usageQuota\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "usageQuota_userId_fkey",
+        "table": "usageQuota"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"usageQuota_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usageQuota_userId_fkey",
+          "public",
+          "\"public\".\"usageQuota\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"usageQuota_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"usageQuota\"\nADD CONSTRAINT \"usageQuota_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"usageQuota_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usageQuota_userId_fkey",
+          "public",
+          "\"public\".\"usageQuota\""
+        ]
+      }
+    ]
+  }
+]

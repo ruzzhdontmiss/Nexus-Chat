@@ -19,8 +19,8 @@ export function MessageList({ messages, generationState }: MessageListProps) {
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1 w-full pb-32">
-      <div className="max-w-3xl mx-auto w-full px-4 pt-8 space-y-8">
+    <ScrollArea className="flex-1 min-h-0 w-full">
+      <div className="max-w-3xl mx-auto w-full px-4 pt-8 pb-32 space-y-8">
         {messages.map((msg, idx) => (
           <Message 
             key={msg.id} 

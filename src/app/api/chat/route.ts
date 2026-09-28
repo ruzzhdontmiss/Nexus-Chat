@@ -4,62 +4,159 @@ import { ModelRequest, ProviderError } from "@/lib/ai/types";
 import { createMessage } from "@/lib/db/messages";
 import { updateConversationTitle, createConversation } from "@/lib/db/conversations";
 import { requireUser } from "@/lib/auth";
-import { checkFreeUsage, recordFreeUsage, RateLimitError } from "@/lib/usage/limits";
-import { modelRegistry } from "@/lib/ai/registry";
+import { resolveModel } from "@/lib/ai/model-resolver";
+import { SearchTool } from "@/lib/tools/search/search-tool";
+import { buildGroundingContext, extractSources } from "@/lib/tools/search/grounding";
+import { getUserEntitlements } from "@/lib/entitlements";
+import type { SearchResponse, SourceReference } from "@/lib/tools/types";
+import { RateLimitError } from "@/lib/usage/limits";
+import { checkRateLimit, checkUsageLimit, recordChatUsage, recordSearchUsage, UsageStatus } from "@/lib/usage/service";
+
+const searchTool = new SearchTool();
 
 export async function POST(req: NextRequest) {
   const reqStart = performance.now();
-  console.log(`[Performance] Request started`);
+  const requestId = crypto.randomUUID();
+  console.log(`[Performance] Request ${requestId} started`);
   try {
-    const { messages, modelId, conversationId } = await req.json();
-    
+    const { messages, modelId, conversationId, search } = await req.json();
     const user = await requireUser();
 
-    // Validation
+    // 1. Validate request
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       throw new ProviderError("invalid_request", "Messages array is required and must not be empty.");
     }
-    
+    const searchRequested = search === true;
+
+    // 2. Resolve/Create Conversation
     let currentConversationId = conversationId;
     if (!currentConversationId) {
       const conv = await createConversation(user.id);
       currentConversationId = conv.id;
     }
-
     const userMessage = messages[messages.length - 1];
-    
-    // 1. Persist User Message
-    await createMessage(user.id, currentConversationId, userMessage.role, userMessage.content);
 
-    // 2. Generate title if it's the first message (messages length === 1)
+    // 3. Persist User Message
+    await createMessage(user.id, currentConversationId, userMessage.role, userMessage.content);
     if (messages.length === 1 && userMessage.content) {
-      // Derive a deterministic title without calling an LLM
-      let title = userMessage.content.trim().split('\n')[0]; // Take first line
-      if (title.length > 40) {
-        title = title.substring(0, 40) + "...";
-      }
+      let title = userMessage.content.trim().split('\n')[0];
+      if (title.length > 40) title = title.substring(0, 40) + "...";
       await updateConversationTitle(user.id, currentConversationId, title);
     }
-    
-    const request: ModelRequest = {
-      modelId: modelId || "nexus/mock-fast",
-      messages,
-      abortSignal: req.signal, // Propagate cancellation to orchestrator
-    };
 
-    const modelInfo = modelRegistry.get(request.modelId);
-    if (modelInfo?.tier === "free") {
-      await checkFreeUsage(user.id);
+    // 4. Rate Limiting for Chat
+    await checkRateLimit(user.id, "chat");
+
+    // 5. Search Execution (if requested)
+    let searchResponse: SearchResponse | null = null;
+    let sources: SourceReference[] = [];
+
+    if (searchRequested) {
+      // Entitlement
+      const entitlements = await getUserEntitlements(user.id);
+      if (!entitlements.searchEnabled) {
+        throw new ProviderError("invalid_request", "Web search is not available for your account.");
+      }
+
+      // Quota + Rate Limit
+      await checkRateLimit(user.id, "search");
+      const searchQuota = await checkUsageLimit(user.id, "search");
+      if (!searchQuota.allowed) {
+        throw new RateLimitError(searchQuota.reason || "Search limit reached");
+      }
+
+      console.log(`[Search] Executing for query: "${userMessage.content.slice(0, 80)}"`);
+      const searchStart = performance.now();
+      
+      const searchResult = await searchTool.execute(
+        { query: userMessage.content, maxResults: 5 },
+        { userId: user.id, conversationId: currentConversationId, abortSignal: req.signal }
+      );
+
+      const searchDuration = performance.now() - searchStart;
+
+      if (req.signal.aborted) {
+        // Record cancelled search
+        await recordSearchUsage({
+          userId: user.id,
+          requestId,
+          conversationId: currentConversationId,
+          durationMs: Math.round(searchDuration),
+          status: "cancelled",
+        });
+        return new Response(JSON.stringify({ error: "Request cancelled." }), {
+          status: 499,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+
+      if (!searchResult.success) {
+        await recordSearchUsage({
+          userId: user.id,
+          requestId,
+          conversationId: currentConversationId,
+          durationMs: Math.round(searchDuration),
+          status: "error",
+        });
+        console.error(`[Search] Failed: ${searchResult.errorType} — ${searchResult.error}`);
+        throw new ProviderError("invalid_request", searchResult.error || "Web search failed.");
+      }
+
+      searchResponse = searchResult.data as SearchResponse;
+      sources = extractSources(searchResponse);
+      
+      await recordSearchUsage({
+        userId: user.id,
+        requestId,
+        conversationId: currentConversationId,
+        durationMs: Math.round(searchDuration),
+        status: "success",
+      });
+
+      console.log(`[Search] Got ${searchResponse.results.length} results in ${searchDuration.toFixed(0)}ms`);
     }
 
+    // 6. Resolve Model & Check Chat Quota
+    const resolvedModelId = modelId || "nexus/mock-fast";
+    const resolved = await resolveModel(user.id, resolvedModelId);
+
+    const chatQuota = await checkUsageLimit(user.id, "chat", resolved.source);
+    if (!chatQuota.allowed) {
+      throw new RateLimitError(chatQuota.reason || "Usage limit reached");
+    }
+
+    // 7. Build Model Request
+    let modelMessages = messages;
+    if (searchResponse) {
+      const groundingContext = buildGroundingContext(searchResponse);
+      modelMessages = [
+        { role: "system", content: groundingContext },
+        ...messages,
+      ];
+    }
+
+    const request: ModelRequest = {
+      modelId: resolvedModelId,
+      messages: modelMessages,
+      abortSignal: req.signal,
+      credentialKey: resolved.credentialKey,
+    };
+
+    // 8. Streaming Response
     const stream = new ReadableStream({
       async start(controller) {
-        let status: "success" | "error" | "rate_limited" = "success";
+        let status: UsageStatus = "success";
         let fullResponse = "";
         let isFirstChunk = true;
-        try {
-          const generator = AIOrchestrator.generate(request);
+        let providerTokens = { inputTokens: null, outputTokens: null, totalTokens: null };
 
+        try {
+          if (sources.length > 0) {
+            const metaLine = JSON.stringify({ type: "sources", sources }) + "\n";
+            controller.enqueue(new TextEncoder().encode(metaLine));
+          }
+
+          const generator = AIOrchestrator.generate(request);
 
           for await (const chunk of generator) {
             if (isFirstChunk) {
@@ -67,15 +164,27 @@ export async function POST(req: NextRequest) {
               isFirstChunk = false;
             }
             if (req.signal.aborted) break;
+            
             fullResponse += chunk.text;
             controller.enqueue(new TextEncoder().encode(chunk.text));
+            
+            // Read usage if provider sent it on final chunks
+            if (chunk.metadata?.usage) {
+               providerTokens = {
+                 inputTokens: chunk.metadata.usage.inputTokens ?? null,
+                 outputTokens: chunk.metadata.usage.outputTokens ?? null,
+                 totalTokens: chunk.metadata.usage.totalTokens ?? null,
+               } as any;
+            }
           }
-          
-          console.log(`[Performance] Stream completed in ${(performance.now() - reqStart).toFixed(2)}ms`);
 
-          // 3. Persist Assistant Message
+          if (req.signal.aborted) {
+            status = "cancelled";
+          }
+
           if (fullResponse) {
-            await createMessage(user.id, currentConversationId, "assistant", fullResponse);
+            const metadata = sources.length > 0 ? JSON.stringify({ sources }) : null;
+            await createMessage(user.id, currentConversationId, "assistant", fullResponse, metadata);
           }
         } catch (err) {
           if (err instanceof RateLimitError) {
@@ -85,33 +194,38 @@ export async function POST(req: NextRequest) {
           }
           if (err instanceof ProviderError) {
             console.error(`[AI Provider Error] ${err.type}: ${err.message}`);
+            controller.enqueue(new TextEncoder().encode(`\n\n**Error:** ${err.message}`));
           } else {
             console.error("[AI Unknown Error]", err);
+            controller.enqueue(new TextEncoder().encode(`\n\n**Error:** An unknown error occurred during generation.`));
           }
-          // Note: In a real app we might stream a specific error event down
         } finally {
           controller.close();
-          // Only record usage for free-tier managed models
-          if (modelInfo?.tier === "free") {
-            const inputChars = messages.reduce((acc: number, m: any) => acc + (m.content?.length || 0), 0);
-            const outputChars = fullResponse.length;
-            const inputTokens = Math.ceil(inputChars / 4);
-            const outputTokens = Math.ceil(outputChars / 4);
-            await recordFreeUsage({
-              userId: user.id,
-              providerId: modelInfo.provider,
-              modelId: modelInfo.id,
-              accessType: modelInfo.access || "managed",
-              inputTokens,
-              outputTokens,
-              totalTokens: inputTokens + outputTokens,
-              status
-            }).catch((err) => console.error("[Usage] Failed to record usage event:", err));
+          const reqDurationMs = Math.round(performance.now() - reqStart);
+          
+          // Normalize tokens if not provided by provider (only guess if managed, else allow nulls)
+          if (status === "success" && providerTokens.inputTokens === null) {
+            // For now, if no tokens provided by adapter, fallback to text length heuristic just to have *some* numbers
+            // BUT wait! The prompt says: "If a provider does not return token counts during streaming, don't fabricate them. Allow: inputTokens = null, outputTokens = null where the underlying provider gives no trustworthy information."
+            // So we DO NOT fabricate!
+            // I will leave them as null.
           }
+
+          await recordChatUsage({
+            userId: user.id,
+            requestId,
+            conversationId: currentConversationId,
+            providerId: resolved.providerId,
+            modelId: resolved.modelInfo.id,
+            accessType: resolved.source,
+            tokens: providerTokens,
+            durationMs: reqDurationMs,
+            status
+          }).catch(err => console.error("[Usage] Failed to record chat event:", err));
         }
       }
     });
-    
+
     return new Response(stream, {
       headers: {
         'Content-Type': 'text/plain',

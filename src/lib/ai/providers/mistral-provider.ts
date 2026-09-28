@@ -45,13 +45,14 @@ export class MistralProvider implements ModelProvider {
         }
       }
     } catch (error: any) {
-      if (error?.status === 401 || error?.status === 403) {
+      const status = error?.status || error?.statusCode || error?.raw_status_code;
+      if (status === 401 || status === 403) {
         throw new ProviderError("auth_failure", "Mistral authentication failed. Check your API key.", error);
       }
-      if (error?.status === 429) {
+      if (status === 429) {
         throw new ProviderError("rate_limited", "Mistral rate limit reached.", error);
       }
-      if (error?.status === 400) {
+      if (status === 400) {
         throw new ProviderError("invalid_request", error.message || "Invalid request to Mistral.", error);
       }
       throw new ProviderError("unknown", "Mistral is temporarily unavailable.", error);

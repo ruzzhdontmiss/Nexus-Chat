@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 *.pem
+/agents
+.claude.md 
+.a
 
 # debug
 npm-debug.log*
@@ -41,3 +44,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.neon
+
+# local AI agent tooling (Antigravity, Claude, etc.)
+.agents/
+.claude/
+skills-lock.json
+
+# local dev/debug scripts
+test-*.js
