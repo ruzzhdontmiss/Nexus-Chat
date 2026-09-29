@@ -6,6 +6,7 @@ import {
   ContextCompressor,
   SourceCitation
 } from "../types";
+import { generateSnippet } from "../utils/text-utils";
 
 export class NexusRetriever implements Retriever {
   constructor(
@@ -38,7 +39,7 @@ export class NexusRetriever implements Retriever {
       page: res.chunk.pageStart,
       section: res.chunk.sectionTitle,
       chunkId: res.chunk.id,
-      snippet: res.chunk.content.substring(0, 100) + "..."
+      snippet: generateSnippet(res.chunk.content, 350)
     }));
 
     // Diagnostic counts (we can infer vector/bm25 candidates by looking at metadata if we wanted, 

@@ -39,56 +39,56 @@ function SourceCard({ source }: { source: SourceReference }) {
   const isDoc = source.type === "document";
 
   const toggleExpand = (e: React.MouseEvent) => {
-    if (isDoc) {
+    if (isDoc && source.snippet) {
       e.preventDefault();
       setExpanded(!expanded);
     }
   };
 
-  const Wrapper = isDoc ? "button" : "a";
-  const wrapperProps = isDoc 
-    ? { onClick: toggleExpand, type: "button" as const } 
-    : { href: source.url, target: "_blank", rel: "noopener noreferrer" };
+  const Wrapper = isDoc && source.snippet ? "button" : isDoc ? "div" : "a";
+  const wrapperProps = isDoc && source.snippet 
+    ? { onClick: toggleExpand, type: "button" as const, "aria-expanded": expanded } 
+    : !isDoc ? { href: source.url, target: "_blank", rel: "noopener noreferrer" } : {};
 
   return (
-    <div className="flex flex-col gap-0 border border-border/40 rounded-xl overflow-hidden bg-muted/20 hover:border-border/60 transition-all duration-200">
+    <div className="flex flex-col border border-border/40 rounded-xl overflow-hidden bg-muted/10 hover:bg-muted/20 hover:border-border/60 transition-all duration-200">
       <Wrapper
         {...wrapperProps}
         className={cn(
-          "group flex items-start gap-2.5 px-3 py-2.5 w-full text-left transition-colors",
-          isDoc ? "hover:bg-muted/40" : "hover:bg-muted/40"
+          "group flex items-start gap-3 px-3.5 py-3 w-full text-left transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-primary",
+          isDoc && !source.snippet ? "cursor-default" : "cursor-pointer"
         )}
       >
-        <div className="h-5 w-5 shrink-0 rounded bg-muted/50 flex items-center justify-center mt-0.5">
-          {isDoc ? <FileIcon className="h-3 w-3 text-muted-foreground" /> : <GlobeIcon className="h-3 w-3 text-muted-foreground" />}
+        <div className="h-6 w-6 shrink-0 rounded-md bg-muted flex items-center justify-center mt-0.5 border border-border/50 text-muted-foreground group-hover:text-foreground transition-colors">
+          {isDoc ? <FileIcon className="h-3.5 w-3.5" /> : <GlobeIcon className="h-3.5 w-3.5" />}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-xs font-medium text-foreground/90 truncate leading-tight group-hover:text-foreground transition-colors">
+        <div className="flex-1 min-w-0 flex flex-col justify-center">
+          <div className="text-sm font-medium text-foreground/90 truncate leading-tight group-hover:text-foreground transition-colors">
             {source.title}
           </div>
-          <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5 flex items-center gap-1.5">
+          <div className="text-[11px] text-muted-foreground/70 truncate mt-1 flex items-center gap-1.5">
             {isDoc ? (
               <>
-                {source.page && <span>Page {source.page}</span>}
-                {source.page && source.section && <span>&middot;</span>}
+                {source.page && <span className="font-medium text-muted-foreground/80">Page {source.page}</span>}
+                {source.page && source.section && <span className="opacity-50">&bull;</span>}
                 {source.section && <span>{source.section}</span>}
-                {!source.page && !source.section && <span>Document Segment</span>}
+                {!source.page && !source.section && <span>Document Extract</span>}
               </>
             ) : (
               source.domain || source.url
             )}
           </div>
         </div>
-        {isDoc ? (
-          <ChevronDownIcon className={cn("h-3 w-3 text-muted-foreground/40 shrink-0 transition-transform duration-200 mt-1", expanded ? "rotate-180" : "")} />
-        ) : (
-          <ExternalLinkIcon className="h-3 w-3 text-muted-foreground/40 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
+        {isDoc && source.snippet ? (
+          <ChevronDownIcon className={cn("h-4 w-4 text-muted-foreground/50 shrink-0 transition-transform duration-200 mt-1", expanded ? "rotate-180 text-foreground" : "group-hover:text-foreground")} />
+        ) : !isDoc && (
+          <ExternalLinkIcon className="h-4 w-4 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-1" />
         )}
       </Wrapper>
       
       {isDoc && expanded && source.snippet && (
-        <div className="px-3 pb-3 pt-1 border-t border-border/20 bg-muted/10 animate-in slide-in-from-top-1 fade-in duration-200">
-          <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap max-h-[200px] overflow-y-auto pr-1 stylish-scrollbar">
+        <div className="px-4 pb-4 pt-2 border-t border-border/20 bg-muted/20 animate-in slide-in-from-top-1 fade-in duration-200">
+          <div className="text-[13px] text-foreground/80 leading-relaxed whitespace-pre-wrap max-h-[300px] overflow-y-auto pr-2 stylish-scrollbar font-normal">
             {source.snippet}
           </div>
         </div>
@@ -115,7 +115,7 @@ export const Message = React.memo(function Message({ message, generationState = 
           : "bg-transparent text-foreground"
       )}>
         {!isUser ? (
-          <div className="[&>p]:mb-4 [&>p:last-child]:mb-0 [&>pre]:my-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-4 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-4">
+          <div className="[&>p]:mb-4 [&>p:last-child]:mb-0 [&>pre]:my-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-4 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-4 [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-3 [&>h3]:text-base [&>h3]:font-semibold [&>h3]:mb-2 [&>h4]:text-sm [&>h4]:font-semibold [&>h4]:mb-2">
             {message.content === "" && (generationState === "requesting" || generationState === "searching" || generationState === "streaming") ? (
               <div className="flex items-center gap-3 text-muted-foreground/80 animate-in fade-in duration-500 py-1">
                 <ThinkingOrb state="working" size={20} theme="dark" aria-label={generationState === "searching" ? "Searching the web" : "Nexus is thinking"} />
