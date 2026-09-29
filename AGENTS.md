@@ -1,9 +1,29 @@
 <!-- BEGIN:nextjs-agent-rules -->
 
-# This is NOT the Next.js you know
+# Nexus Engineering Instructions
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+## Project
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+Nexus is a performance-first multi-model AI workspace built with Next.js, TypeScript, Tailwind, shadcn/ui, Prisma/Postgres, Auth.js, provider abstractions, streaming chat, Tavily web search, usage controls, and BYOK model support.
 
-<!-- END:nextjs-agent-rules -->
+## RAG Phase
+
+The complete RAG expansion plan is:
+
+`docs/NEXUS-RAG-PLAN.md`
+
+Before implementing any NEXUS-012+ RAG ticket, read that document once and use it as the architectural source of truth.
+
+Do not repeat the entire RAG plan in individual tickets.
+
+## Important Rules
+
+- Preserve existing working Nexus architecture unless a ticket explicitly requires change.
+- Do not rewrite working authentication, provider, search, usage, or streaming systems unnecessarily.
+- Keep provider-specific LLM code behind the existing provider abstraction.
+- Keep RAG retrieval separate from generation.
+- Keep secrets server-side and never commit credentials.
+- Prioritize frontend responsiveness and streaming performance.
+- Do not implement future roadmap features unless explicitly requested by a ticket.
+- Do not treat roadmap items as completed functionality.
+- Run relevant verification before declaring a ticket complete.

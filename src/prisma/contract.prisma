@@ -9,6 +9,35 @@ model User {
   conversations Conversation[]
   usageEvents   UsageEvent[]
   providerConnections ProviderConnection[]
+  documents     Document[]
+}
+
+model Document {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  filename  String
+  mimeType  String
+  size      Int
+  status    String          // "uploaded" | "processing" | "ready" | "failed"
+  metadata  String?         // JSON blob
+  createdAt TimestamptzString(3) @default(now())
+  updatedAt TimestamptzString(3) @default(now())
+  chunks    DocumentChunk[]
+}
+
+model DocumentChunk {
+  id           String          @id @default(uuid())
+  documentId   String
+  document     Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  content      String
+  chunkIndex   Int
+  pageStart    Int?
+  pageEnd      Int?
+  sectionTitle String?
+  tokenCount   Int?
+  embedding    pgvector.Vector(length: 384)? // BGE-small uses 384 dims
+  metadata     String?         // JSON blob
 }
 
 model Conversation {

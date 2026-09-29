@@ -11,6 +11,8 @@ import { getUserEntitlements } from "@/lib/entitlements";
 import type { SearchResponse, SourceReference } from "@/lib/tools/types";
 import { RateLimitError } from "@/lib/usage/limits";
 import { checkRateLimit, checkUsageLimit, recordChatUsage, recordSearchUsage, UsageStatus } from "@/lib/usage/service";
+import { ragRetriever } from "@/lib/rag";
+import type { SourceCitation } from "@/lib/rag/types";
 
 const searchTool = new SearchTool();
 
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
   const requestId = crypto.randomUUID();
   console.log(`[Performance] Request ${requestId} started`);
   try {
-    const { messages, modelId, conversationId, search } = await req.json();
+    const { messages, modelId, conversationId, search, documentIds } = await req.json();
     const user = await requireUser();
 
     // 1. Validate request
@@ -125,15 +127,44 @@ export async function POST(req: NextRequest) {
       throw new RateLimitError(chatQuota.reason || "Usage limit reached");
     }
 
+    // 6b. Execute Document Retrieval (if requested)
+    let ragCitations: SourceCitation[] = [];
+    let ragContextText = "";
+    if (documentIds && Array.isArray(documentIds) && documentIds.length > 0) {
+      console.log(`[RAG] Executing retrieval for documents: ${documentIds.join(", ")}`);
+      // Since it's a prototype, we just pass the last message content as the query.
+      const ragContext = await ragRetriever.retrieve(userMessage.content, {
+        userId: user.id,
+        // We could filter by documentId if we implemented an IN filter, but for now we'll pick the first doc for simplicity
+        // or just don't pass documentId if we want to search all user documents, but here we pass the first.
+        documentId: documentIds[0]
+      });
+      ragCitations = ragContext.citations;
+      if (ragContext.results.length > 0) {
+        ragContextText = "Retrieved Document Evidence:\n" + ragContext.results.map(r => `Document: ${r.chunk.metadata?.filename || 'Unknown'}\n${r.chunk.content}`).join("\n\n");
+      }
+    }
+
     // 7. Build Model Request
     let modelMessages = messages;
+    let systemContext = "";
+
     if (searchResponse) {
-      const groundingContext = buildGroundingContext(searchResponse);
+      systemContext += buildGroundingContext(searchResponse) + "\n\n";
+    }
+    if (ragContextText) {
+      systemContext += "Use the following retrieved document evidence to answer the user's question accurately. Do not fabricate document facts. Cite your sources.\n\n" + ragContextText;
+    }
+
+    if (systemContext) {
       modelMessages = [
-        { role: "system", content: groundingContext },
+        { role: "system", content: systemContext.trim() },
         ...messages,
       ];
     }
+
+    // Merge citations
+    const allCitations = [...sources, ...ragCitations];
 
     const request: ModelRequest = {
       modelId: resolvedModelId,
@@ -151,8 +182,8 @@ export async function POST(req: NextRequest) {
         let providerTokens = { inputTokens: null, outputTokens: null, totalTokens: null };
 
         try {
-          if (sources.length > 0) {
-            const metaLine = JSON.stringify({ type: "sources", sources }) + "\n";
+          if (allCitations.length > 0) {
+            const metaLine = JSON.stringify({ type: "sources", sources: allCitations }) + "\n";
             controller.enqueue(new TextEncoder().encode(metaLine));
           }
 
@@ -183,7 +214,7 @@ export async function POST(req: NextRequest) {
           }
 
           if (fullResponse) {
-            const metadata = sources.length > 0 ? JSON.stringify({ sources }) : null;
+            const metadata = allCitations.length > 0 ? JSON.stringify({ sources: allCitations }) : null;
             await createMessage(user.id, currentConversationId, "assistant", fullResponse, metadata);
           }
         } catch (err) {

@@ -1,0 +1,242 @@
+[
+  {
+    "id": "table.document",
+    "label": "Create table \"document\"",
+    "summary": "Creates table \"document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"document\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"document\"",
+        "sql": "CREATE TABLE \"public\".\"document\" (\n  \"createdAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"filename\" text NOT NULL,\n  \"id\" text NOT NULL,\n  \"metadata\" text,\n  \"mimeType\" text NOT NULL,\n  \"size\" int4 NOT NULL,\n  \"status\" text NOT NULL,\n  \"updatedAt\" timestamptz(3) DEFAULT (now()) NOT NULL,\n  \"userId\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"document\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.documentChunk",
+    "label": "Create table \"documentChunk\"",
+    "summary": "Creates table \"documentChunk\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "documentChunk"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"documentChunk\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentChunk\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"documentChunk\"",
+        "sql": "CREATE TABLE \"public\".\"documentChunk\" (\n  \"chunkIndex\" int4 NOT NULL,\n  \"content\" text NOT NULL,\n  \"documentId\" text NOT NULL,\n  \"embedding\" vector(384),\n  \"id\" text NOT NULL,\n  \"metadata\" text,\n  \"pageEnd\" int4,\n  \"pageStart\" int4,\n  \"sectionTitle\" text,\n  \"tokenCount\" int4,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"documentChunk\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentChunk\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.document.document_userId_idx_a489d58a",
+    "label": "Create index \"document_userId_idx_a489d58a\" on \"document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "document_userId_idx_a489d58a",
+        "table": "document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"document_userId_idx_a489d58a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"document_userId_idx_a489d58a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"document_userId_idx_a489d58a\"",
+        "sql": "CREATE INDEX \"document_userId_idx_a489d58a\" ON \"public\".\"document\" (\"userId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"document_userId_idx_a489d58a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"document_userId_idx_a489d58a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentChunk.documentChunk_documentId_idx_825ef746",
+    "label": "Create index \"documentChunk_documentId_idx_825ef746\" on \"documentChunk\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentChunk_documentId_idx_825ef746",
+        "table": "documentChunk"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentChunk_documentId_idx_825ef746\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentChunk_documentId_idx_825ef746\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentChunk_documentId_idx_825ef746\"",
+        "sql": "CREATE INDEX \"documentChunk_documentId_idx_825ef746\" ON \"public\".\"documentChunk\" (\"documentId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentChunk_documentId_idx_825ef746\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentChunk_documentId_idx_825ef746\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.document.document_userId_fkey",
+    "label": "Add foreign key \"document_userId_fkey\" on \"document\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "document_userId_fkey",
+        "table": "document"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"document_userId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "document_userId_fkey",
+          "public",
+          "\"public\".\"document\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"document_userId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"document\"\nADD CONSTRAINT \"document_userId_fkey\"\nFOREIGN KEY (\"userId\")\nREFERENCES \"public\".\"user\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"document_userId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "document_userId_fkey",
+          "public",
+          "\"public\".\"document\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentChunk.documentChunk_documentId_fkey",
+    "label": "Add foreign key \"documentChunk_documentId_fkey\" on \"documentChunk\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentChunk_documentId_fkey",
+        "table": "documentChunk"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentChunk_documentId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentChunk_documentId_fkey",
+          "public",
+          "\"public\".\"documentChunk\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentChunk_documentId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentChunk\"\nADD CONSTRAINT \"documentChunk_documentId_fkey\"\nFOREIGN KEY (\"documentId\")\nREFERENCES \"public\".\"document\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentChunk_documentId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentChunk_documentId_fkey",
+          "public",
+          "\"public\".\"documentChunk\""
+        ]
+      }
+    ]
+  }
+]

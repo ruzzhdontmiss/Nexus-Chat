@@ -8,6 +8,14 @@
       "model": "Conversation",
       "namespace": "public"
     },
+    "document": {
+      "model": "Document",
+      "namespace": "public"
+    },
+    "documentChunk": {
+      "model": "DocumentChunk",
+      "namespace": "public"
+    },
     "message": {
       "model": "Message",
       "namespace": "public"
@@ -134,6 +142,276 @@
               },
               "namespaceId": "public",
               "table": "conversation"
+            }
+          },
+          "Document": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "filename": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "metadata": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "mimeType": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "size": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 3
+                  }
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "chunks": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "documentId"
+                  ]
+                },
+                "to": {
+                  "model": "DocumentChunk",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "filename": {
+                  "column": "filename"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "metadata": {
+                  "column": "metadata"
+                },
+                "mimeType": {
+                  "column": "mimeType"
+                },
+                "size": {
+                  "column": "size"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "document"
+            }
+          },
+          "DocumentChunk": {
+            "fields": {
+              "chunkIndex": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "content": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "documentId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "embedding": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/vector@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 384
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "metadata": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pageEnd": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "pageStart": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sectionTitle": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "tokenCount": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "document": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "documentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Document",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "chunkIndex": {
+                  "column": "chunkIndex"
+                },
+                "content": {
+                  "column": "content"
+                },
+                "documentId": {
+                  "column": "documentId"
+                },
+                "embedding": {
+                  "column": "embedding"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "metadata": {
+                  "column": "metadata"
+                },
+                "pageEnd": {
+                  "column": "pageEnd"
+                },
+                "pageStart": {
+                  "column": "pageStart"
+                },
+                "sectionTitle": {
+                  "column": "sectionTitle"
+                },
+                "tokenCount": {
+                  "column": "tokenCount"
+                }
+              },
+              "namespaceId": "public",
+              "table": "documentChunk"
             }
           },
           "Message": {
@@ -774,6 +1052,21 @@
                   "namespace": "public"
                 }
               },
+              "documents": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "userId"
+                  ]
+                },
+                "to": {
+                  "model": "Document",
+                  "namespace": "public"
+                }
+              },
               "providerConnections": {
                 "cardinality": "1:N",
                 "on": {
@@ -904,6 +1197,196 @@
                   ],
                   "name": "conversation_userId_idx_a489d58a",
                   "prefix": "conversation_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "document": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "filename": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "metadata": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "mimeType": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "size": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 3
+                  }
+                },
+                "userId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "userId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "document"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "user"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "userId"
+                  ],
+                  "name": "document_userId_idx_a489d58a",
+                  "prefix": "document_userId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "documentChunk": {
+              "columns": {
+                "chunkIndex": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "content": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "documentId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "embedding": {
+                  "codecId": "pg/vector@1",
+                  "nativeType": "vector",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 384
+                  }
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "metadata": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "pageEnd": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "pageStart": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "sectionTitle": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "tokenCount": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "documentId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "documentChunk"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "document"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "documentId"
+                  ],
+                  "name": "documentChunk_documentId_idx_825ef746",
+                  "prefix": "documentChunk_documentId_idx",
                   "unique": false
                 }
               ],
@@ -1458,10 +1941,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "264c7cbf2141154d01db98b936b68a232e218b05e98ea220aa97138af0d5def7"
+    "storageHash": "9506f6df0ad5087b22f7561805fa532819da440bc1dc84c228044e686fef7e48"
   },
   "execution": {
-    "executionHash": "e859dbda54ef8e98fcbb2796cb13fa94f3a64e7084bcc7a13623ddc809a94f5b",
+    "executionHash": "fb1a9cc653188226077dd7021b1622cddf1b5bdaa8905aafb4db87e59783e365",
     "mutations": {
       "defaults": [
         {
@@ -1473,6 +1956,28 @@
             "column": "id",
             "namespace": "public",
             "table": "conversation"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "document"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "documentChunk"
           }
         },
         {
@@ -1551,6 +2056,7 @@
       "lateral": true,
       "limit": true,
       "orderBy": true,
+      "pgvector.cosine": true,
       "returning": true
     },
     "sql": {
@@ -1562,7 +2068,58 @@
       "scalarList": true
     }
   },
-  "extensions": {},
+  "extensions": {
+    "pgvector": {
+      "capabilities": {
+        "postgres": {
+          "pgvector.cosine": true
+        }
+      },
+      "familyId": "sql",
+      "id": "pgvector",
+      "kind": "extension",
+      "targetId": "postgres",
+      "types": {
+        "codecTypes": {
+          "import": {
+            "alias": "PgVectorTypes",
+            "named": "CodecTypes",
+            "package": "@internal/extension-pgvector/codec-types"
+          },
+          "typeImports": [
+            {
+              "alias": "Vector",
+              "named": "Vector",
+              "package": "@internal/extension-pgvector/codec-types"
+            }
+          ]
+        },
+        "operationTypes": {
+          "import": {
+            "alias": "PgVectorOperationTypes",
+            "named": "OperationTypes",
+            "package": "@internal/extension-pgvector/operation-types"
+          }
+        },
+        "queryOperationTypes": {
+          "import": {
+            "alias": "PgVectorQueryOperationTypes",
+            "named": "QueryOperationTypes",
+            "package": "@internal/extension-pgvector/operation-types"
+          }
+        },
+        "storage": [
+          {
+            "familyId": "sql",
+            "nativeType": "vector",
+            "targetId": "postgres",
+            "typeId": "pg/vector@1"
+          }
+        ]
+      },
+      "version": "0.0.1"
+    }
+  },
   "meta": {},
   "_generated": {
     "warning": "⚠️  GENERATED FILE - DO NOT EDIT",
