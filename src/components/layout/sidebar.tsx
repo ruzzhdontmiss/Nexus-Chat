@@ -6,13 +6,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   const [conversations, setConversations] = useState<{ id: string, title: string }[]>([]);
 
@@ -29,6 +30,15 @@ export function Sidebar() {
     }
   }, [pathname, session]);
 
+  const handleNewChatClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (pathname.startsWith("/chat/") || pathname === "/") {
+      window.dispatchEvent(new CustomEvent("nexus:new-chat"));
+    } else {
+      router.push("/");
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -37,7 +47,15 @@ export function Sidebar() {
       )}
     >
       <div className={cn("flex items-center p-3 h-14", collapsed ? "justify-center" : "justify-between")}>
-        {!collapsed && <span className="font-display font-normal text-[20px] pl-2 tracking-wide">Nexus</span>}
+        {!collapsed && (
+          <button 
+            onClick={handleNewChatClick}
+            className="font-display font-normal text-[20px] pl-2 tracking-wide text-sidebar-foreground hover:text-primary transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-primary rounded-md cursor-pointer"
+            aria-label="New Chat (Home)"
+          >
+            Nexus
+          </button>
+        )}
         <Button variant="ghost" size="icon" onClick={() => setCollapsed(!collapsed)} className="h-8 w-8 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent">
           <PanelLeftIcon className="h-4 w-4" />
         </Button>
@@ -47,17 +65,17 @@ export function Sidebar() {
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger render={
-              <Link href="/" className="flex items-center justify-center w-full h-10 border border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors">
+              <button onClick={handleNewChatClick} className="flex items-center justify-center w-full h-10 border border-sidebar-border hover:bg-sidebar-accent hover:text-sidebar-accent-foreground rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-primary">
                 <PlusIcon className="h-4 w-4" />
-              </Link>
+              </button>
             } />
             <TooltipContent side="right">New Chat</TooltipContent>
           </Tooltip>
         ) : (
-          <Link href="/" className="flex items-center w-full justify-start gap-2 h-10 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80 rounded-md transition-colors text-sm font-medium">
+          <button onClick={handleNewChatClick} className="flex items-center w-full justify-start gap-2 h-10 px-3 bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80 rounded-md transition-colors text-sm font-medium focus:outline-none focus-visible:ring-1 focus-visible:ring-primary">
             <PlusIcon className="h-4 w-4" />
             <span>New Chat</span>
-          </Link>
+          </button>
         )}
       </div>
 

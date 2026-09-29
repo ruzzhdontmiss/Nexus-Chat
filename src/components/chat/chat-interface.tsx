@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MessageList } from "./message-list";
 import { MessageComposer } from "./message-composer";
 import { MessageType, SourceReference } from "./message";
@@ -30,6 +30,21 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const [selectedModelId, setSelectedModelId] = useState(AVAILABLE_MODELS[0].id);
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [attachments, setAttachments] = useState<AttachedDocument[]>([]);
+
+  useEffect(() => {
+    const handleNewChat = () => {
+      setMessages([]);
+      setConversationId(undefined);
+      setInput("");
+      setGenerationState("idle");
+      setSearchEnabled(false);
+      setAttachments([]);
+      window.history.pushState(null, '', '/');
+    };
+
+    window.addEventListener("nexus:new-chat", handleNewChat);
+    return () => window.removeEventListener("nexus:new-chat", handleNewChat);
+  }, []);
 
   const isGenerating = generationState === "requesting" || generationState === "streaming" || generationState === "searching";
 
