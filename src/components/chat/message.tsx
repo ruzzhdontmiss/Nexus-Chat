@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { SparklesIcon, UserIcon, GlobeIcon, ExternalLinkIcon, FileIcon, ChevronDownIcon } from "lucide-react";
+import { UserIcon, GlobeIcon, ExternalLinkIcon, FileIcon, ChevronDownIcon, CopyIcon, CheckIcon } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -97,30 +97,60 @@ function SourceCard({ source }: { source: SourceReference }) {
   );
 }
 
-export const Message = React.memo(function Message({ message, generationState = "idle" }: MessageProps) {
-  const isUser = message.role === "user";
+function MessageActions({ content }: { content: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
-    <div className={cn("flex w-full gap-4", isUser ? "justify-end" : "justify-start")}>
+    <div className="flex items-center gap-2 mt-2 pt-1">
+      <button 
+        onClick={handleCopy}
+        className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-muted-foreground/50 hover:text-foreground hover:bg-muted/40 rounded-md transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+        aria-label="Copy response"
+      >
+        {copied ? <CheckIcon className="h-3.5 w-3.5 text-green-500" /> : <CopyIcon className="h-3.5 w-3.5" />}
+        <span>{copied ? "Copied" : "Copy"}</span>
+      </button>
+    </div>
+  );
+}
+
+export const Message = React.memo(function Message({ message, generationState = "idle" }: MessageProps) {
+  const isUser = message.role === "user";
+  const isGenerating = !isUser && (generationState === "requesting" || generationState === "streaming" || generationState === "searching");
+
+  return (
+    <div className={cn("flex w-full gap-3 group/message", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
-        <div className="h-8 w-8 shrink-0 bg-muted rounded-lg flex items-center justify-center ring-1 ring-border/50 mt-1">
-          <SparklesIcon className="h-4 w-4 text-foreground/80" />
+        <div className="shrink-0 flex flex-col items-center pt-[6px]">
+          <ThinkingOrb 
+            state={isGenerating ? "working" : "breathing"} 
+            size={20} 
+            theme="dark" 
+            aria-label={isGenerating ? "Nexus is thinking" : "Nexus"}
+          />
         </div>
       )}
       
       <div className={cn(
-        "px-4 py-3 rounded-3xl max-w-[85%] whitespace-pre-wrap leading-relaxed",
+        "min-w-0 max-w-[85%] whitespace-pre-wrap leading-relaxed",
         isUser 
-          ? "bg-muted/40 text-foreground rounded-tr-sm border border-border/30" 
-          : "bg-transparent text-foreground"
+          ? "bg-muted/40 text-foreground px-4 py-3 rounded-3xl rounded-tr-sm border border-border/30" 
+          : "bg-transparent text-foreground py-1"
       )}>
         {!isUser ? (
           <div className="[&>p]:mb-4 [&>p:last-child]:mb-0 [&>pre]:my-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-4 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-4 [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-3 [&>h3]:text-base [&>h3]:font-semibold [&>h3]:mb-2 [&>h4]:text-sm [&>h4]:font-semibold [&>h4]:mb-2">
-            {message.content === "" && (generationState === "requesting" || generationState === "searching" || generationState === "streaming") ? (
+            {message.content === "" && isGenerating ? (
               <div className="flex items-center gap-3 text-muted-foreground/80 animate-in fade-in duration-500 py-1">
-                <ThinkingOrb state="working" size={20} theme="dark" aria-label={generationState === "searching" ? "Searching the web" : "Nexus is thinking"} />
-                {generationState === "searching" && (
-                  <span className="text-xs text-muted-foreground/60 animate-in fade-in duration-300">Searching the web…</span>
+                {generationState === "searching" ? (
+                  <span className="text-sm text-muted-foreground/70 animate-in fade-in duration-300">Searching the web…</span>
+                ) : (
+                  <span className="text-sm text-muted-foreground/70 animate-in fade-in duration-300">Thinking…</span>
                 )}
               </div>
             ) : (
@@ -165,6 +195,10 @@ export const Message = React.memo(function Message({ message, generationState = 
                     </div>
                   </div>
                 )}
+
+                <div className="opacity-100 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100 transition-opacity duration-200">
+                  <MessageActions content={message.content} />
+                </div>
               </>
             )}
           </div>
