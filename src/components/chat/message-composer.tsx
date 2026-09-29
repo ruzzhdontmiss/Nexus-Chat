@@ -6,6 +6,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useRef, useEffect } from "react";
 import { ModelSelector } from "./model-selector";
 import { cn } from "@/lib/utils";
+import { AttachedDocument, DocumentAttachment } from "./document-attachment";
 
 interface MessageComposerProps {
   input: string;
@@ -17,6 +18,9 @@ interface MessageComposerProps {
   onSelectModel: (id: string) => void;
   searchEnabled: boolean;
   onToggleSearch: (enabled: boolean) => void;
+  attachments: AttachedDocument[];
+  onRemoveAttachment: (id: string) => void;
+  onFilesSelected: (files: FileList) => void;
 }
 
 export function MessageComposer({
@@ -29,8 +33,12 @@ export function MessageComposer({
   onSelectModel,
   searchEnabled,
   onToggleSearch,
+  attachments,
+  onRemoveAttachment,
+  onFilesSelected,
 }: MessageComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -60,6 +68,30 @@ export function MessageComposer({
     <div className="w-full">
       <div className="relative flex flex-col w-full bg-background border border-border/50 rounded-3xl overflow-hidden transition-all duration-150 ease-out hover:border-white/20 focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/10 shadow-sm backdrop-blur-md">
         
+        {/* Hidden File Input */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept="application/pdf"
+          multiple 
+          onChange={(e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              onFilesSelected(e.target.files);
+              e.target.value = ''; // Reset
+            }
+          }} 
+        />
+
+        {/* Attachments Area */}
+        {attachments.length > 0 && (
+          <div className="flex flex-wrap gap-2 px-4 pt-4 pb-1">
+            {attachments.map(doc => (
+              <DocumentAttachment key={doc.id} document={doc} onRemove={onRemoveAttachment} />
+            ))}
+          </div>
+        )}
+
         {/* Top Textarea */}
         <textarea
           ref={textareaRef}
@@ -97,7 +129,12 @@ export function MessageComposer({
               <SearchIcon className="h-3.5 w-3.5 mr-1.5" />
               Search
             </Button>
-            <Button variant="ghost" size="sm" className="h-8 text-muted-foreground hover:text-foreground rounded-full px-3 text-xs font-medium transition-colors">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => fileInputRef.current?.click()}
+              className="h-8 text-muted-foreground hover:text-foreground rounded-full px-3 text-xs font-medium transition-colors"
+            >
               <PaperclipIcon className="h-3.5 w-3.5 mr-1.5" />
               Attach
             </Button>

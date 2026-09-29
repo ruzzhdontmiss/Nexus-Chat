@@ -1,7 +1,8 @@
 "use client";
 
+import React, { useState } from "react";
 import { cn } from "@/lib/utils";
-import { SparklesIcon, UserIcon, GlobeIcon, ExternalLinkIcon } from "lucide-react";
+import { SparklesIcon, UserIcon, GlobeIcon, ExternalLinkIcon, FileIcon, ChevronDownIcon } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -11,9 +12,14 @@ import { GenerationState } from "./chat-interface";
 
 export type SourceReference = {
   id: string;
+  type?: "web" | "document";
   title: string;
-  url: string;
+  url?: string;
   domain?: string;
+  page?: number;
+  section?: string;
+  snippet?: string;
+  chunkId?: string;
 };
 
 export type MessageType = {
@@ -29,30 +35,69 @@ interface MessageProps {
 }
 
 function SourceCard({ source }: { source: SourceReference }) {
+  const [expanded, setExpanded] = useState(false);
+  const isDoc = source.type === "document";
+
+  const toggleExpand = (e: React.MouseEvent) => {
+    if (isDoc) {
+      e.preventDefault();
+      setExpanded(!expanded);
+    }
+  };
+
+  const Wrapper = isDoc ? "button" : "a";
+  const wrapperProps = isDoc 
+    ? { onClick: toggleExpand, type: "button" as const } 
+    : { href: source.url, target: "_blank", rel: "noopener noreferrer" };
+
   return (
-    <a
-      href={source.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex items-start gap-2.5 px-3 py-2.5 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 hover:border-border/60 transition-all duration-200"
-    >
-      <div className="h-5 w-5 shrink-0 rounded bg-muted/50 flex items-center justify-center mt-0.5">
-        <GlobeIcon className="h-3 w-3 text-muted-foreground" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-foreground/90 truncate leading-tight group-hover:text-foreground transition-colors">
-          {source.title}
+    <div className="flex flex-col gap-0 border border-border/40 rounded-xl overflow-hidden bg-muted/20 hover:border-border/60 transition-all duration-200">
+      <Wrapper
+        {...wrapperProps}
+        className={cn(
+          "group flex items-start gap-2.5 px-3 py-2.5 w-full text-left transition-colors",
+          isDoc ? "hover:bg-muted/40" : "hover:bg-muted/40"
+        )}
+      >
+        <div className="h-5 w-5 shrink-0 rounded bg-muted/50 flex items-center justify-center mt-0.5">
+          {isDoc ? <FileIcon className="h-3 w-3 text-muted-foreground" /> : <GlobeIcon className="h-3 w-3 text-muted-foreground" />}
         </div>
-        <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5">
-          {source.domain || source.url}
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium text-foreground/90 truncate leading-tight group-hover:text-foreground transition-colors">
+            {source.title}
+          </div>
+          <div className="text-[10px] text-muted-foreground/60 truncate mt-0.5 flex items-center gap-1.5">
+            {isDoc ? (
+              <>
+                {source.page && <span>Page {source.page}</span>}
+                {source.page && source.section && <span>&middot;</span>}
+                {source.section && <span>{source.section}</span>}
+                {!source.page && !source.section && <span>Document Segment</span>}
+              </>
+            ) : (
+              source.domain || source.url
+            )}
+          </div>
         </div>
-      </div>
-      <ExternalLinkIcon className="h-3 w-3 text-muted-foreground/40 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
-    </a>
+        {isDoc ? (
+          <ChevronDownIcon className={cn("h-3 w-3 text-muted-foreground/40 shrink-0 transition-transform duration-200 mt-1", expanded ? "rotate-180" : "")} />
+        ) : (
+          <ExternalLinkIcon className="h-3 w-3 text-muted-foreground/40 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity mt-0.5" />
+        )}
+      </Wrapper>
+      
+      {isDoc && expanded && source.snippet && (
+        <div className="px-3 pb-3 pt-1 border-t border-border/20 bg-muted/10 animate-in slide-in-from-top-1 fade-in duration-200">
+          <div className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap max-h-[200px] overflow-y-auto pr-1 stylish-scrollbar">
+            {source.snippet}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
-export function Message({ message, generationState = "idle" }: MessageProps) {
+export const Message = React.memo(function Message({ message, generationState = "idle" }: MessageProps) {
   const isUser = message.role === "user";
 
   return (
@@ -135,4 +180,4 @@ export function Message({ message, generationState = "idle" }: MessageProps) {
       )}
     </div>
   );
-}
+});

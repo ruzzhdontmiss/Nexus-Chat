@@ -15,7 +15,7 @@ export function MessageList({ messages, generationState }: MessageListProps) {
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
   }, [messages]);
 
   return (

@@ -6,6 +6,7 @@ import { MessageComposer } from "./message-composer";
 import { MessageType, SourceReference } from "./message";
 import { AVAILABLE_MODELS } from "@/lib/ai/models";
 import { ThinkingOrb } from "thinking-orbs";
+import { AttachedDocument } from "./document-attachment";
 
 export type GenerationState = "idle" | "searching" | "requesting" | "streaming" | "complete" | "error" | "cancelled";
 
@@ -28,6 +29,7 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const [generationState, setGenerationState] = useState<GenerationState>("idle");
   const [selectedModelId, setSelectedModelId] = useState(AVAILABLE_MODELS[0].id);
   const [searchEnabled, setSearchEnabled] = useState(false);
+  const [attachments, setAttachments] = useState<AttachedDocument[]>([]);
 
   const isGenerating = generationState === "requesting" || generationState === "streaming" || generationState === "searching";
 
@@ -82,6 +84,7 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
           messages: [...messages, userMessage],
           conversationId: currentConversationId,
           search: searchEnabled,
+          documentIds: attachments.filter(a => a.status === "ready" && a.documentId).map(a => a.documentId)
         }),
       });
 
@@ -94,6 +97,8 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
       let buffer = "";
       let sourcesParsed = false;
       let streamedSources: SourceReference[] = [];
+      let fullMessageContent = "";
+      let lastUpdateTime = performance.now();
 
       while (!done) {
         const { value, done: doneReading } = await reader.read();
@@ -142,35 +147,107 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
               isFirstChunk = false;
             }
             const appendText = buffer;
-            setMessages((prev) =>
-              prev.map((msg) =>
-                msg.id === assistantMessageId
-                  ? { ...msg, content: msg.content + appendText }
-                  : msg
-              )
-            );
+            fullMessageContent += appendText;
+            
+            // Throttle React state updates to ~30ms to prevent choppiness
+            const now = performance.now();
+            if (now - lastUpdateTime > 30) {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: fullMessageContent }
+                    : msg
+                )
+              );
+              lastUpdateTime = now;
+            }
             buffer = "";
           }
         }
       }
 
-      // Flush any remaining buffer
+      // Flush any remaining buffer and ensure the final state is fully updated
       if (buffer) {
-        const finalAppend = buffer;
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMessageId
-              ? { ...msg, content: msg.content + finalAppend }
-              : msg
-          )
-        );
+        fullMessageContent += buffer;
       }
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === assistantMessageId
+            ? { ...msg, content: fullMessageContent }
+            : msg
+        )
+      );
     } catch (error) {
       console.error(error);
       setGenerationState("error");
     } finally {
       setGenerationState((prev) => (prev === "streaming" || prev === "requesting" || prev === "searching" ? "complete" : prev));
     }
+  };
+
+  const handleFilesSelected = async (files: FileList) => {
+    const newAttachments: AttachedDocument[] = Array.from(files).map((file) => ({
+      id: Math.random().toString(36).substring(7),
+      file,
+      name: file.name,
+      size: file.size,
+      status: "uploading",
+      progress: 0,
+    }));
+
+    setAttachments((prev) => [...prev, ...newAttachments]);
+
+    // Process each file
+    for (const attachment of newAttachments) {
+      try {
+        // Upload simulation for progress (using XMLHttpRequest or fetch)
+        // Since fetch doesn't support upload progress out of the box, we'll simulate progress
+        // and switch to 'processing' when the fetch fires.
+        setAttachments((prev) =>
+          prev.map((doc) =>
+            doc.id === attachment.id ? { ...doc, status: "processing" } : doc
+          )
+        );
+
+        const formData = new FormData();
+        formData.append("file", attachment.file);
+
+        const res = await fetch("/api/documents", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to upload");
+        }
+
+        const data = await res.json();
+        if (data.success) {
+          setAttachments((prev) =>
+            prev.map((doc) =>
+              doc.id === attachment.id
+                ? { ...doc, status: "ready", documentId: data.documentId }
+                : doc
+            )
+          );
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
+      } catch (error: any) {
+        console.error("Upload error:", error);
+        setAttachments((prev) =>
+          prev.map((doc) =>
+            doc.id === attachment.id
+              ? { ...doc, status: "failed", error: error.message }
+              : doc
+          )
+        );
+      }
+    }
+  };
+
+  const handleRemoveAttachment = (id: string) => {
+    setAttachments((prev) => prev.filter((doc) => doc.id !== id));
   };
 
   return (
@@ -192,6 +269,9 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
               onSelectModel={setSelectedModelId}
               searchEnabled={searchEnabled}
               onToggleSearch={setSearchEnabled}
+              attachments={attachments}
+              onRemoveAttachment={handleRemoveAttachment}
+              onFilesSelected={handleFilesSelected}
             />
           </div>
         </>
@@ -220,6 +300,9 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
               onSelectModel={setSelectedModelId}
               searchEnabled={searchEnabled}
               onToggleSearch={setSearchEnabled}
+              attachments={attachments}
+              onRemoveAttachment={handleRemoveAttachment}
+              onFilesSelected={handleFilesSelected}
             />
 
             <div className="flex flex-wrap justify-center gap-x-3 gap-y-3 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150 fill-mode-both">
