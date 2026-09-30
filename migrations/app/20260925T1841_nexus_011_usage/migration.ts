@@ -93,6 +93,7 @@ export default class M extends Migration<Start, End> {
         table: 'usageEvent',
         column: col('kind', 'text', { codecRef: { codecId: 'pg/text@1' } }),
       }),
+      this.setNotNull({ schema: 'public', table: 'usageEvent', column: 'kind' }),
 
       this.dropNotNull({ schema: 'public', table: 'usageEvent', column: 'accessType' }),
       this.dropNotNull({ schema: 'public', table: 'usageEvent', column: 'modelId' }),

@@ -288,6 +288,54 @@
     ]
   },
   {
+    "id": "alterNullability.setNotNull.usageEvent.kind",
+    "label": "Set NOT NULL on \"usageEvent\".\"kind\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "kind",
+        "table": "usageEvent"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"kind\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "kind"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"kind\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"usageEvent\" WHERE \"kind\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"kind\"",
+        "sql": "ALTER TABLE \"public\".\"usageEvent\" ALTER COLUMN \"kind\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"kind\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "usageEvent",
+          "kind",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
     "id": "alterNullability.dropNotNull.usageEvent.accessType",
     "label": "Drop NOT NULL on \"usageEvent\".\"accessType\"",
     "operationClass": "widening",
