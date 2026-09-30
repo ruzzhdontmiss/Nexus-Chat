@@ -30,6 +30,7 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const [selectedModelId, setSelectedModelId] = useState(AVAILABLE_MODELS[0].id);
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [attachments, setAttachments] = useState<AttachedDocument[]>([]);
+  const [conversationDocuments, setConversationDocuments] = useState<string[]>([]);
 
   useEffect(() => {
     const handleNewChat = () => {
@@ -39,6 +40,7 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
       setGenerationState("idle");
       setSearchEnabled(false);
       setAttachments([]);
+      setConversationDocuments([]);
       window.history.pushState(null, '', '/');
     };
 
@@ -59,6 +61,14 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    
+    // Persist document attachments for the conversation, then clear from composer
+    const currentDocIds = attachments.filter(a => a.status === "ready" && a.documentId).map(a => a.documentId as string);
+    setConversationDocuments(prev => {
+      const updated = Array.from(new Set([...prev, ...currentDocIds]));
+      return updated;
+    });
+    setAttachments([]);
 
     // If search is enabled, show "searching" state first
     setGenerationState(searchEnabled ? "searching" : "requesting");
@@ -99,7 +109,7 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
           messages: [...messages, userMessage],
           conversationId: currentConversationId,
           search: searchEnabled,
-          documentIds: attachments.filter(a => a.status === "ready" && a.documentId).map(a => a.documentId)
+          documentIds: Array.from(new Set([...conversationDocuments, ...currentDocIds]))
         }),
       });
 
@@ -122,11 +132,6 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
 
         if (chunkValue) {
           buffer += chunkValue;
-
-          // If search is disabled, we don't expect a sources header.
-          if (!searchEnabled) {
-            sourcesParsed = true;
-          }
 
           // On first data, check for sources metadata header
           if (!sourcesParsed) {

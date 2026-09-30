@@ -125,7 +125,7 @@ export const Message = React.memo(function Message({ message, generationState = 
   const isGenerating = !isUser && (generationState === "requesting" || generationState === "streaming" || generationState === "searching");
 
   return (
-    <div className={cn("flex w-full gap-3 group/message", isUser ? "justify-end" : "justify-start")}>
+    <div id={`message-${message.id}`} className={cn("flex w-full gap-3 group/message", isUser ? "justify-end" : "justify-start")}>
       {!isUser && (
         <div className="shrink-0 flex flex-col items-center pt-[6px]">
           <ThinkingOrb 
@@ -144,7 +144,7 @@ export const Message = React.memo(function Message({ message, generationState = 
           : "bg-transparent text-foreground py-1"
       )}>
         {!isUser ? (
-          <div className="[&>p]:mb-4 [&>p:last-child]:mb-0 [&>pre]:my-4 [&>ul]:list-disc [&>ul]:ml-6 [&>ul]:mb-4 [&>ol]:list-decimal [&>ol]:ml-6 [&>ol]:mb-4 [&>h1]:text-xl [&>h1]:font-bold [&>h1]:mb-3 [&>h2]:text-lg [&>h2]:font-semibold [&>h2]:mb-3 [&>h3]:text-base [&>h3]:font-semibold [&>h3]:mb-2 [&>h4]:text-sm [&>h4]:font-semibold [&>h4]:mb-2">
+          <div className="[&>p]:mb-4 [&>p:last-child]:mb-0 [&_p]:leading-relaxed [&_ul]:list-disc [&_ul]:list-outside [&_ul]:pl-5 [&_ul]:mb-4 [&_ul]:space-y-2 [&_ol]:list-decimal [&_ol]:list-outside [&_ol]:pl-5 [&_ol]:mb-4 [&_ol]:space-y-2 [&_li>p]:m-0 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-3 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-2 [&_h4]:text-sm [&_h4]:font-semibold [&_h4]:mt-4 [&_h4]:mb-2 [&_pre]:my-4">
             {message.content === "" && isGenerating ? (
               <div className="flex items-center gap-3 text-muted-foreground/80 animate-in fade-in duration-500 py-1">
                 {generationState === "searching" ? (

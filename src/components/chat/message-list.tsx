@@ -12,10 +12,21 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, generationState }: MessageListProps) {
-  const endOfMessagesRef = useRef<HTMLDivElement>(null);
+  const lastUserMessageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
+    // Find the last user message
+    const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+    
+    if (lastUserMsg && lastUserMsg.id !== lastUserMessageIdRef.current) {
+      // It's a new user message! Scroll it near the top.
+      lastUserMessageIdRef.current = lastUserMsg.id;
+      
+      const el = document.getElementById(`message-${lastUserMsg.id}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
   }, [messages]);
 
   return (
@@ -28,7 +39,6 @@ export function MessageList({ messages, generationState }: MessageListProps) {
             generationState={idx === messages.length - 1 ? generationState : "idle"} 
           />
         ))}
-        <div ref={endOfMessagesRef} className="h-4" />
       </div>
     </ScrollArea>
   );
