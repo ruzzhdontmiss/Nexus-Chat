@@ -32,10 +32,23 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const [attachments, setAttachments] = useState<AttachedDocument[]>([]);
   const [conversationDocuments, setConversationDocuments] = useState<string[]>([]);
 
+  const [currentRouteId, setCurrentRouteId] = useState(initialConversationId);
+
+  useEffect(() => {
+    if (initialConversationId !== currentRouteId) {
+      setConversationId(initialConversationId);
+      setMessages(initialMessages);
+      setGenerationState("idle");
+      setConversationDocuments([]);
+      setCurrentRouteId(initialConversationId);
+    }
+  }, [initialConversationId, initialMessages, currentRouteId]);
+
   useEffect(() => {
     const handleNewChat = () => {
       setMessages([]);
       setConversationId(undefined);
+      setCurrentRouteId(undefined);
       setInput("");
       setGenerationState("idle");
       setSearchEnabled(false);

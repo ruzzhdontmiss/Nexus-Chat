@@ -11,7 +11,7 @@ import { getUserEntitlements } from "@/lib/entitlements";
 import type { SearchResponse, SourceReference } from "@/lib/tools/types";
 import { RateLimitError } from "@/lib/usage/limits";
 import { checkRateLimit, checkUsageLimit, recordChatUsage, recordSearchUsage, UsageStatus } from "@/lib/usage/service";
-import { ragRetriever } from "@/lib/rag";
+// RAG modules are lazy-loaded when needed
 import type { SourceCitation } from "@/lib/rag/types";
 
 const searchTool = new SearchTool();
@@ -132,6 +132,8 @@ export async function POST(req: NextRequest) {
     let ragContextText = "";
     if (documentIds && Array.isArray(documentIds) && documentIds.length > 0) {
       console.log(`[RAG] Executing retrieval for documents: ${documentIds.join(", ")}`);
+      // Lazy load the RAG stack only when needed
+      const { ragRetriever } = await import("@/lib/rag");
       // Since it's a prototype, we just pass the last message content as the query.
       const ragContext = await ragRetriever.retrieve(userMessage.content, {
         userId: user.id,
