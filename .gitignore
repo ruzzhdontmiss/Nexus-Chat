@@ -53,3 +53,4 @@ skills-lock.json
 
 # local dev/debug scripts
 test-*.js
+.env*.local

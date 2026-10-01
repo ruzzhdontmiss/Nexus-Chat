@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageList } from "./message-list";
 import { MessageComposer } from "./message-composer";
 import { MessageType, SourceReference } from "./message";
@@ -32,23 +32,22 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const [attachments, setAttachments] = useState<AttachedDocument[]>([]);
   const [conversationDocuments, setConversationDocuments] = useState<string[]>([]);
 
-  const [currentRouteId, setCurrentRouteId] = useState(initialConversationId);
+  const lastPropsId = useRef(initialConversationId);
 
   useEffect(() => {
-    if (initialConversationId !== currentRouteId) {
+    if (initialConversationId !== lastPropsId.current) {
       setConversationId(initialConversationId);
       setMessages(initialMessages);
       setGenerationState("idle");
       setConversationDocuments([]);
-      setCurrentRouteId(initialConversationId);
+      lastPropsId.current = initialConversationId;
     }
-  }, [initialConversationId, initialMessages, currentRouteId]);
+  }, [initialConversationId, initialMessages]);
 
   useEffect(() => {
     const handleNewChat = () => {
       setMessages([]);
       setConversationId(undefined);
-      setCurrentRouteId(undefined);
       setInput("");
       setGenerationState("idle");
       setSearchEnabled(false);

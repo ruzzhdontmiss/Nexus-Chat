@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { IngestionPipeline } from "@/lib/rag/ingestion/pipeline";
-import { db } from "@/prisma/db";
+// IngestionPipeline will be dynamically imported to prevent eager ML model loading
 
-const pipeline = new IngestionPipeline();
+import { db } from "@/prisma/db";
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,6 +25,9 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
     
+    const { IngestionPipeline } = await import("@/lib/rag/ingestion/pipeline");
+    const pipeline = new IngestionPipeline();
+
     // In a real application, you might want to run this in a background job 
     // to prevent timeout on Vercel. For this prototype, we await it directly.
     const documentId = await pipeline.processPdfBuffer(user.id, file.name, buffer);
