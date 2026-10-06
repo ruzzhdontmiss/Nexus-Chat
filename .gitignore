@@ -49,8 +49,13 @@ next-env.d.ts
 # local AI agent tooling (Antigravity, Claude, etc.)
 .agents/
 .claude/
+.cursor/
+.devin/
+AGENTS.md
+CLAUDE.md
 skills-lock.json
 
 # local dev/debug scripts
 test-*.js
+test-rag.pdf
 .env*.local
