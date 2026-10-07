@@ -3,7 +3,7 @@ import Fastify from "fastify";
 import multipart from "@fastify/multipart";
 import { IngestionPipeline } from "./ingestion/pipeline.js";
 import { ragRetriever } from "./index.js";
-
+import { initializeDatabase, closeDatabase } from "./db/client.js";
 const fastify = Fastify({ logger: true });
 const API_KEY = process.env.RAG_SERVICE_API_KEY || "development-secret-do-not-use-in-prod";
 
@@ -67,6 +67,12 @@ fastify.post("/retrieve", async (request, reply) => {
 const start = async () => {
   try {
     const port = parseInt(process.env.PORT || "8000");
+
+    // Connect database before listening
+    console.log("Initializing database connection...");
+    await initializeDatabase();
+    console.log("Database connected successfully.");
+
     await fastify.listen({ port, host: "0.0.0.0" });
     console.log(`RAG Service listening on port ${port}`);
   } catch (err) {
@@ -74,5 +80,15 @@ const start = async () => {
     process.exit(1);
   }
 };
+
+const shutdown = async () => {
+  console.log("Shutting down gracefully...");
+  await fastify.close();
+  await closeDatabase();
+  process.exit(0);
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 start();

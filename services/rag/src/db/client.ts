@@ -1,1 +1,1 @@
-export { db } from "@nexus/database";
+export { db, initializeDatabase, closeDatabase } from "@nexus/database";
