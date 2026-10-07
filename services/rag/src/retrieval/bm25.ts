@@ -1,5 +1,5 @@
 import { DocumentChunk, LexicalRetriever, RetrievalResult } from "@nexus/rag-contracts";
-import { db } from "../db/client";
+import { db } from "../db/client.js";
 
 // Simple tokenizer
 function tokenize(text: string): string[] {

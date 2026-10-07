@@ -1,13 +1,16 @@
 {
   "name": "@nexus/database",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "build": "tsc"
   },
   "main": "dist/db.js",
-  "types": "src/db.ts",
+  "types": "dist/db.d.ts",
   "exports": {
-    "node": "./dist/db.js",
-    "default": "./src/db.ts"
+    ".": {
+      "types": "./dist/db.d.ts",
+      "import": "./dist/db.js"
+    }
   }
 }

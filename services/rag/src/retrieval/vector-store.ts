@@ -1,4 +1,4 @@
-import { db } from "../db/client";
+import { db } from "../db/client.js";
 import { DocumentChunk, RetrievalResult, VectorStore } from "@nexus/rag-contracts";
 
 export class PrismaVectorStore implements VectorStore {

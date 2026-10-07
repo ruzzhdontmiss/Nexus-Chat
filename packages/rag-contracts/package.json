@@ -1,13 +1,16 @@
 {
   "name": "@nexus/rag-contracts",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "build": "tsc"
   },
   "main": "dist/types.js",
-  "types": "src/types.ts",
+  "types": "dist/types.d.ts",
   "exports": {
-    "node": "./dist/types.js",
-    "default": "./src/types.ts"
+    ".": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js"
+    }
   }
 }

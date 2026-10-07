@@ -1,8 +1,8 @@
 import { getDocumentProxy, extractText } from "unpdf";
-import { db } from "../db/client";
-import { ContextAwareChunker } from "./chunker";
-import { BGEEmbeddingProvider } from "../embeddings/bge-provider";
-import { PrismaVectorStore } from "../retrieval/vector-store";
+import { db } from "../db/client.js";
+import { ContextAwareChunker } from "./chunker.js";
+import { BGEEmbeddingProvider } from "../embeddings/bge-provider.js";
+import { PrismaVectorStore } from "../retrieval/vector-store.js";
 import { DocumentChunk } from "@nexus/rag-contracts";
 
 export class IngestionPipeline {

@@ -1,10 +1,10 @@
-import { BGEEmbeddingProvider } from "./embeddings/bge-provider";
-import { PrismaVectorStore } from "./retrieval/vector-store";
-import { BM25Retriever } from "./retrieval/bm25";
-import { RRFHybridRetriever } from "./retrieval/hybrid";
-import { CrossEncoderReranker } from "./retrieval/reranker";
-import { SimpleContextCompressor } from "./retrieval/compressor";
-import { NexusRetriever } from "./retrieval/retriever";
+import { BGEEmbeddingProvider } from "./embeddings/bge-provider.js";
+import { PrismaVectorStore } from "./retrieval/vector-store.js";
+import { BM25Retriever } from "./retrieval/bm25.js";
+import { RRFHybridRetriever } from "./retrieval/hybrid.js";
+import { CrossEncoderReranker } from "./retrieval/reranker.js";
+import { SimpleContextCompressor } from "./retrieval/compressor.js";
+import { NexusRetriever } from "./retrieval/retriever.js";
 
 const embeddingProvider = new BGEEmbeddingProvider();
 const vectorStore = new PrismaVectorStore();

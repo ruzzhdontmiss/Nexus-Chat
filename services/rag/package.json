@@ -1,6 +1,7 @@
 {
   "name": "nexus-rag",
   "version": "1.0.0",
+  "type": "module",
   "description": "Nexus RAG Service",
   "main": "dist/server.js",
   "scripts": {
@@ -21,7 +22,7 @@
   "devDependencies": {
     "tsx": "^4.7.1",
     "typescript": "^5.4.3",
-    "@types/node": "^20.11.30",
+    "@types/node": "^22.18.0",
     "prisma": "^8.0.0-rc.15",
     "@prisma/client": "^6.19.3"
   }

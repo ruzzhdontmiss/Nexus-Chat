@@ -6,7 +6,7 @@ import {
   ContextCompressor,
   SourceCitation
 } from "@nexus/rag-contracts";
-import { generateSnippet } from "../utils/text-utils";
+import { generateSnippet } from "../utils/text-utils.js";
 
 export class NexusRetriever implements Retriever {
   constructor(

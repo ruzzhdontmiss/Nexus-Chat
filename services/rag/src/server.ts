@@ -1,8 +1,8 @@
-import "./env";
+import "./env.js";
 import Fastify from "fastify";
 import multipart from "@fastify/multipart";
-import { IngestionPipeline } from "./ingestion/pipeline";
-import { ragRetriever } from "./index";
+import { IngestionPipeline } from "./ingestion/pipeline.js";
+import { ragRetriever } from "./index.js";
 
 const fastify = Fastify({ logger: true });
 const API_KEY = process.env.RAG_SERVICE_API_KEY || "development-secret-do-not-use-in-prod";
