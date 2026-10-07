@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@nexus/database": ["./packages/database/src/db.ts"],
+      "@nexus/rag-contracts": ["./packages/rag-contracts/src/types.ts"]
     }
   },
   "include": [

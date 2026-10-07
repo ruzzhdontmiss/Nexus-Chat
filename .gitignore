@@ -65,3 +65,4 @@ test-rag.pdf
 /services/rag/dist/
 /services/rag/.env
 /services/rag/.env.*
+/packages/*/dist/
