@@ -1,5 +1,5 @@
 import { pipeline, env, FeatureExtractionPipeline } from "@xenova/transformers";
-import { EmbeddingProvider } from "../types";
+import { EmbeddingProvider } from "@nexus/rag-contracts";
 
 // Configure transformers to not download models if we want to point to a local cache,
 // but for standard usage, let it cache locally in the node environment.

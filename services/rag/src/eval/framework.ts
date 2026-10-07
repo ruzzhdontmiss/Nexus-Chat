@@ -1,4 +1,4 @@
-import { Retriever } from "../types";
+import { Retriever } from "@nexus/rag-contracts";
 
 export interface EvalTestCase {
   question: string;

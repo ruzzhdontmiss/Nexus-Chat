@@ -1,4 +1,4 @@
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 import { NEXUS_FREE_LIMITS, RateLimitError } from "./limits";
 
 export type UsageEventKind = "chat_request" | "search_request";

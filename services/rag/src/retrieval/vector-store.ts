@@ -1,5 +1,5 @@
-import { db } from "@/prisma/db";
-import { DocumentChunk, RetrievalResult, VectorStore } from "../types";
+import { db } from "../db/client";
+import { DocumentChunk, RetrievalResult, VectorStore } from "@nexus/rag-contracts";
 
 export class PrismaVectorStore implements VectorStore {
   async add(chunks: DocumentChunk[], embeddings: number[][]): Promise<void> {

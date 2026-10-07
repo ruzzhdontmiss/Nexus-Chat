@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 // IngestionPipeline will be dynamically imported to prevent eager ML model loading
 
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,15 +23,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    
-    const { IngestionPipeline } = await import("@/lib/rag/ingestion/pipeline");
-    const pipeline = new IngestionPipeline();
+    const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8000";
+    const RAG_SERVICE_API_KEY = process.env.RAG_SERVICE_API_KEY || "development-secret-do-not-use-in-prod";
 
-    // In a real application, you might want to run this in a background job 
-    // to prevent timeout on Vercel. For this prototype, we await it directly.
-    const documentId = await pipeline.processPdfBuffer(user.id, file.name, buffer);
+    const proxyFormData = new FormData();
+    proxyFormData.append("userId", user.id);
+    proxyFormData.append("file", file);
 
+    const res = await fetch(`${RAG_SERVICE_URL}/ingest`, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RAG_SERVICE_API_KEY}`
+      },
+      body: proxyFormData
+    });
+
+    if (!res.ok) {
+      throw new Error(`RAG Service returned ${res.status}`);
+    }
+
+    const { documentId } = await res.json();
     return NextResponse.json({ success: true, documentId });
   } catch (error: any) {
     if (error?.message === "Unauthorized") {

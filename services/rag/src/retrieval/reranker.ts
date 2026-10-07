@@ -1,5 +1,5 @@
 import { pipeline, env, TextClassificationPipeline } from "@xenova/transformers";
-import { Reranker, RetrievalResult } from "../types";
+import { Reranker, RetrievalResult } from "@nexus/rag-contracts";
 
 // Note: Xenova cross-encoders output logits. We can convert to probabilities if needed, 
 // but sorting by logits is mathematically equivalent for ranking.

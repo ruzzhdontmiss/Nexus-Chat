@@ -1,4 +1,4 @@
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 
 export async function createConversation(userId: string, title?: string) {
   const conversation = await db.orm.public.Conversation.create({

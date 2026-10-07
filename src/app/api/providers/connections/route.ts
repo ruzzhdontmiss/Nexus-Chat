@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 import { encrypt, maskCredential } from "@/lib/crypto/credentials";
 import { getProvider } from "@/lib/ai/provider-registry";
 

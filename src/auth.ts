@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [

@@ -1,4 +1,4 @@
-import { HybridRetriever, LexicalRetriever, RetrievalResult, VectorStore, EmbeddingProvider } from "../types";
+import { HybridRetriever, LexicalRetriever, RetrievalResult, VectorStore, EmbeddingProvider } from "@nexus/rag-contracts";
 
 export class RRFHybridRetriever implements HybridRetriever {
   private rrfK = 60; // Standard RRF constant

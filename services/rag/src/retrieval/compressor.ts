@@ -1,4 +1,4 @@
-import { ContextCompressor, RetrievalResult } from "../types";
+import { ContextCompressor, RetrievalResult } from "@nexus/rag-contracts";
 
 export class SimpleContextCompressor implements ContextCompressor {
   constructor(private maxTokens: number = 3000) {}

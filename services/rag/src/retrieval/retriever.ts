@@ -5,7 +5,7 @@ import {
   Reranker, 
   ContextCompressor,
   SourceCitation
-} from "../types";
+} from "@nexus/rag-contracts";
 import { generateSnippet } from "../utils/text-utils";
 
 export class NexusRetriever implements Retriever {

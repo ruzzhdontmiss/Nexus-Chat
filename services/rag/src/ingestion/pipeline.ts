@@ -1,9 +1,9 @@
 import { getDocumentProxy, extractText } from "unpdf";
-import { db } from "@/prisma/db";
+import { db } from "../db/client";
 import { ContextAwareChunker } from "./chunker";
 import { BGEEmbeddingProvider } from "../embeddings/bge-provider";
 import { PrismaVectorStore } from "../retrieval/vector-store";
-import { DocumentChunk } from "../types";
+import { DocumentChunk } from "@nexus/rag-contracts";
 
 export class IngestionPipeline {
   private chunker = new ContextAwareChunker();

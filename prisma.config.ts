@@ -5,7 +5,7 @@ import pgvector from "@prisma/orm-extension-pgvector/control";
 
 export default definePrismaConfig({
   orm: defineConfig({
-    contract: "./src/prisma/contract.prisma",
+    contract: "./packages/database/src/contract.prisma",
     db: { connection: process.env.DATABASE_URL! },
     extensions: [pgvector],
   }),

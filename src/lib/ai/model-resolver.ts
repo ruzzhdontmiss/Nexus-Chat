@@ -13,7 +13,7 @@
 
 import { ModelInfo, ProviderError } from "./types";
 import { modelRegistry } from "./registry";
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 import { decrypt } from "@/lib/crypto/credentials";
 
 export type ResolvedModel = {

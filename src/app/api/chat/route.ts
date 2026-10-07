@@ -12,7 +12,7 @@ import type { SearchResponse, SourceReference } from "@/lib/tools/types";
 import { RateLimitError } from "@/lib/usage/limits";
 import { checkRateLimit, checkUsageLimit, recordChatUsage, recordSearchUsage, UsageStatus } from "@/lib/usage/service";
 // RAG modules are lazy-loaded when needed
-import type { SourceCitation } from "@/lib/rag/types";
+import type { SourceCitation } from "@nexus/rag-contracts";
 
 const searchTool = new SearchTool();
 
@@ -132,18 +132,33 @@ export async function POST(req: NextRequest) {
     let ragContextText = "";
     if (documentIds && Array.isArray(documentIds) && documentIds.length > 0) {
       console.log(`[RAG] Executing retrieval for documents: ${documentIds.join(", ")}`);
-      // Lazy load the RAG stack only when needed
-      const { ragRetriever } = await import("@/lib/rag");
-      // Since it's a prototype, we just pass the last message content as the query.
-      const ragContext = await ragRetriever.retrieve(userMessage.content, {
-        userId: user.id,
-        // We could filter by documentId if we implemented an IN filter, but for now we'll pick the first doc for simplicity
-        // or just don't pass documentId if we want to search all user documents, but here we pass the first.
-        documentId: documentIds[0]
+      const RAG_SERVICE_URL = process.env.RAG_SERVICE_URL || "http://localhost:8000";
+      const RAG_SERVICE_API_KEY = process.env.RAG_SERVICE_API_KEY || "development-secret-do-not-use-in-prod";
+
+      const res = await fetch(`${RAG_SERVICE_URL}/retrieve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${RAG_SERVICE_API_KEY}`
+        },
+        body: JSON.stringify({
+          query: userMessage.content,
+          filter: {
+            userId: user.id,
+            documentIds: documentIds
+          }
+        })
       });
+
+      if (!res.ok) {
+        console.error(`[RAG Service Error] ${res.status} ${res.statusText}`);
+        throw new ProviderError("invalid_request", "RAG service unavailable");
+      }
+
+      const ragContext = await res.json();
       ragCitations = ragContext.citations;
       if (ragContext.results.length > 0) {
-        ragContextText = "Retrieved Document Evidence:\n" + ragContext.results.map(r => `Document: ${r.chunk.metadata?.filename || 'Unknown'}\n${r.chunk.content}`).join("\n\n");
+        ragContextText = "Retrieved Document Evidence:\n" + ragContext.results.map((r: any) => `Document: ${r.chunk.metadata?.filename || 'Unknown'}\n${r.chunk.content}`).join("\n\n");
       }
     }
 

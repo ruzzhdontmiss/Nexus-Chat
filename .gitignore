@@ -59,3 +59,9 @@ skills-lock.json
 test-*.js
 test-rag.pdf
 .env*.local
+
+# RAG service generated/dependency files
+/services/rag/node_modules/
+/services/rag/dist/
+/services/rag/.env
+/services/rag/.env.*

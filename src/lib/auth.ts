@@ -2,7 +2,12 @@ import { auth } from "@/auth";
 
 export async function getCurrentUser() {
   const session = await auth();
-  return session?.user;
+
+  if (!session?.user) {
+    return null;
+  }
+
+  return session.user;
 }
 
 export async function requireUser() {

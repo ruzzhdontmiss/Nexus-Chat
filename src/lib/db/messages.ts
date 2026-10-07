@@ -1,4 +1,4 @@
-import { db } from "@/prisma/db";
+import { db } from "@nexus/database";
 
 export async function createMessage(
   userId: string,
