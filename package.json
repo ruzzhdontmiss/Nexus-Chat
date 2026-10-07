@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:rag": "npm run build --workspace=@nexus/rag-contracts && npm run build --workspace=@nexus/database && npm run build --workspace=nexus-rag",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma skills sync || exit 0"
