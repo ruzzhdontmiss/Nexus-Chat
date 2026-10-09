@@ -7,6 +7,8 @@ import { MessageType, SourceReference } from "./message";
 import { AVAILABLE_MODELS } from "@/lib/ai/models";
 import { ThinkingOrb } from "thinking-orbs";
 import { AttachedDocument } from "./document-attachment";
+import { useSession } from "next-auth/react";
+import { AuthModal } from "@/components/auth/auth-modal";
 
 export type GenerationState = "idle" | "searching" | "requesting" | "streaming" | "complete" | "error" | "cancelled";
 
@@ -31,6 +33,9 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [attachments, setAttachments] = useState<AttachedDocument[]>([]);
   const [conversationDocuments, setConversationDocuments] = useState<string[]>([]);
+  const { data: session, status } = useSession();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalTitle, setAuthModalTitle] = useState("Welcome back");
 
   const lastPropsId = useRef(initialConversationId);
 
@@ -43,6 +48,16 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
       lastPropsId.current = initialConversationId;
     }
   }, [initialConversationId, initialMessages]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      const draft = sessionStorage.getItem("nexus_draft_prompt");
+      if (draft) {
+        setInput(draft);
+        sessionStorage.removeItem("nexus_draft_prompt");
+      }
+    }
+  }, [status]);
 
   useEffect(() => {
     const handleNewChat = () => {
@@ -65,15 +80,28 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   const handleSubmit = async () => {
     if (!input.trim() || isGenerating) return;
 
+    if (status === "unauthenticated") {
+      sessionStorage.setItem("nexus_draft_prompt", input);
+      setAuthModalTitle("Welcome back");
+      setAuthModalOpen(true);
+      return;
+    }
+    if (status === "loading") return;
+
+    const currentReadyAttachments = attachments
+      .filter(a => a.status === "ready" && a.documentId)
+      .map(a => ({ id: a.documentId as string, name: a.name }));
+
     const userMessage: MessageType = {
       id: Date.now().toString(),
       role: "user",
       content: input.trim(),
+      attachments: currentReadyAttachments.length > 0 ? currentReadyAttachments : undefined
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    
+
     // Persist document attachments for the conversation, then clear from composer
     const currentDocIds = attachments.filter(a => a.status === "ready" && a.documentId).map(a => a.documentId as string);
     setConversationDocuments(prev => {
@@ -180,7 +208,7 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
             }
             const appendText = buffer;
             fullMessageContent += appendText;
-            
+
             // Throttle React state updates to ~30ms to prevent choppiness
             const now = performance.now();
             if (now - lastUpdateTime > 30) {
@@ -218,6 +246,16 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
   };
 
   const handleFilesSelected = async (files: FileList) => {
+    if (status === "unauthenticated") {
+      if (input.trim()) {
+        sessionStorage.setItem("nexus_draft_prompt", input);
+      }
+      setAuthModalTitle("Welcome back");
+      setAuthModalOpen(true);
+      return;
+    }
+    if (status === "loading") return;
+
     const newAttachments: AttachedDocument[] = Array.from(files).map((file) => ({
       id: Math.random().toString(36).substring(7),
       file,
@@ -351,6 +389,12 @@ export function ChatInterface({ initialConversationId, initialMessages = [] }: C
           </div>
         </div>
       )}
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        title={authModalTitle}
+      />
     </div>
   );
 }
