@@ -1,4 +1,4 @@
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 import { NEXUS_FREE_LIMITS, RateLimitError } from "./limits";
 
 export type UsageEventKind = "chat_request" | "search_request";
@@ -22,7 +22,7 @@ export async function checkRateLimit(userId: string, endpoint: "chat" | "search"
   const windowStart = now.toISOString();
 
   // Atomically increment rate limit using raw SQL for UPSERT functionality
-  const plan = db.raw.sql`
+  const plan = (await getDb()).raw.sql`
     INSERT INTO "rateLimit" ("id", "userId", "endpoint", "windowStart", "count")
     VALUES (gen_random_uuid(), ${userId}, ${endpoint}, ${windowStart}, 1)
     ON CONFLICT ("userId", "endpoint", "windowStart")
@@ -30,7 +30,7 @@ export async function checkRateLimit(userId: string, endpoint: "chat" | "search"
     RETURNING "count"
   `.returnsRow({ count: 'pg/int4@1' }).build();
   
-  const result = await db.runtime().query(plan);
+  const result = await (await getDb()).runtime().query(plan);
   const count = (result as any[])[0]?.count || 1;
 
   if (count > limit) {
@@ -43,14 +43,14 @@ export async function checkUsageLimit(userId: string, type: "chat" | "search", a
   today.setUTCHours(0,0,0,0);
   const dateStr = today.toISOString().split('T')[0];
 
-  const plan = db.raw.sql`
+  const plan = (await getDb()).raw.sql`
     INSERT INTO "usageQuota" ("id", "userId", "date", "chatRequests", "searchRequests", "tokens", "updatedAt")
     VALUES (gen_random_uuid(), ${userId}, ${dateStr}, 0, 0, 0, now())
     ON CONFLICT ("userId", "date") DO NOTHING
   `.affectedCount().build();
-  await db.runtime().execute(plan);
+  await (await getDb()).runtime().execute(plan);
 
-  const current = await db.orm.public.UsageQuota.where({ userId, date: dateStr }).first();
+  const current = await (await getDb()).orm.public.UsageQuota.where({ userId, date: dateStr }).first();
   if (!current) {
     return { allowed: true };
   }
@@ -83,7 +83,7 @@ export async function recordSearchUsage(data: {
   durationMs: number;
   status: UsageStatus;
 }): Promise<void> {
-  await db.orm.public.UsageEvent.create({
+  await (await getDb()).orm.public.UsageEvent.create({
     kind: "search_request",
     userId: data.userId,
     requestId: data.requestId,
@@ -97,12 +97,12 @@ export async function recordSearchUsage(data: {
     today.setUTCHours(0,0,0,0);
     const dateStr = today.toISOString().split('T')[0];
     
-    const plan = db.raw.sql`
+    const plan = (await getDb()).raw.sql`
       UPDATE "usageQuota" 
       SET "searchRequests" = "searchRequests" + 1 
       WHERE "userId" = ${data.userId} AND "date" = ${dateStr}
     `.affectedCount().build();
-    await db.runtime().execute(plan);
+    await (await getDb()).runtime().execute(plan);
   }
 }
 
@@ -117,7 +117,7 @@ export async function recordChatUsage(data: {
   durationMs: number;
   status: UsageStatus;
 }): Promise<void> {
-  await db.orm.public.UsageEvent.create({
+  await (await getDb()).orm.public.UsageEvent.create({
     kind: "chat_request",
     userId: data.userId,
     requestId: data.requestId,
@@ -139,12 +139,12 @@ export async function recordChatUsage(data: {
     
     const totalTokens = data.tokens.totalTokens || 0;
 
-    const plan = db.raw.sql`
+    const plan = (await getDb()).raw.sql`
       UPDATE "usageQuota" 
       SET "chatRequests" = "chatRequests" + 1, "tokens" = "tokens" + ${totalTokens}
       WHERE "userId" = ${data.userId} AND "date" = ${dateStr}
     `.affectedCount().build();
-    await db.runtime().execute(plan);
+    await (await getDb()).runtime().execute(plan);
   }
 }
 
@@ -153,7 +153,7 @@ export async function getUserUsageStats(userId: string) {
   today.setUTCHours(0,0,0,0);
   const dateStr = today.toISOString().split('T')[0];
 
-  let current = await db.orm.public.UsageQuota.where({ userId, date: dateStr }).first();
+  let current = await (await getDb()).orm.public.UsageQuota.where({ userId, date: dateStr }).first();
   if (!current) {
     current = { chatRequests: 0, searchRequests: 0, tokens: 0 } as any;
   }

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireUser } from "@/lib/auth";
 // IngestionPipeline will be dynamically imported to prevent eager ML model loading
 
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const user = await requireUser();
-    const allDocs = await db.orm.public.Document
+    const allDocs = await (await getDb()).orm.public.Document
       .where({ userId: user.id })
       .all();
 

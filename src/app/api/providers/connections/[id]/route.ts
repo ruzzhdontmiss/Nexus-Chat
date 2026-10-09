@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 
 /**
  * DELETE /api/providers/connections/:id
@@ -16,7 +16,7 @@ export async function DELETE(
     const { id } = await params;
 
     // Verify ownership — only delete if this connection belongs to the authenticated user
-    const connection = await db.orm.public.ProviderConnection
+    const connection = await (await getDb()).orm.public.ProviderConnection
       .where({ id, userId: user.id })
       .first();
 
@@ -24,7 +24,7 @@ export async function DELETE(
       return Response.json({ error: "Connection not found." }, { status: 404 });
     }
 
-    await db.orm.public.ProviderConnection
+    await (await getDb()).orm.public.ProviderConnection
       .where({ id })
       .delete();
 

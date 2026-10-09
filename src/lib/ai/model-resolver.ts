@@ -13,7 +13,7 @@
 
 import { ModelInfo, ProviderError } from "./types";
 import { modelRegistry } from "./registry";
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 import { decrypt } from "@/lib/crypto/credentials";
 
 export type ResolvedModel = {
@@ -59,7 +59,7 @@ export async function resolveModel(userId: string, modelId: string): Promise<Res
   }
 
   // BYOK: fetch user's ProviderConnection from DB
-  const connection = await db.orm.public.ProviderConnection
+  const connection = await (await getDb()).orm.public.ProviderConnection
     .where({ userId, providerId })
     .first();
 

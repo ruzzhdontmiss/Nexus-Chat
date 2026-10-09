@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 import { encrypt, maskCredential } from "@/lib/crypto/credentials";
 import { getProvider } from "@/lib/ai/provider-registry";
 
@@ -11,7 +11,7 @@ import { getProvider } from "@/lib/ai/provider-registry";
 export async function GET(_req: NextRequest) {
   try {
     const user = await requireUser();
-    const connections = await db.orm.public.ProviderConnection
+    const connections = await (await getDb()).orm.public.ProviderConnection
       .where({ userId: user.id })
       .all();
 
@@ -60,13 +60,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for existing connection (unique constraint: userId + providerId)
-    const existing = await db.orm.public.ProviderConnection
+    const existing = await (await getDb()).orm.public.ProviderConnection
       .where({ userId: user.id, providerId })
       .first();
 
     if (existing) {
       // Update existing connection with new credential
-      await db.orm.public.ProviderConnection
+      await (await getDb()).orm.public.ProviderConnection
         .where({ id: existing.id })
         .update({
           encryptedCredential: encrypt(credential),
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
 
     // Create new connection
     const encryptedCredential = encrypt(credential);
-    const connection = await db.orm.public.ProviderConnection.create({
+    const connection = await (await getDb()).orm.public.ProviderConnection.create({
       userId: user.id,
       providerId,
       authType: authType || "api_key",

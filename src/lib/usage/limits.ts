@@ -1,4 +1,4 @@
-import { db } from "@nexus/database";
+
 
 // Limits configuration (all values are server-side only via env vars)
 export const NEXUS_FREE_LIMITS = {

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { requireUser } from "@/lib/auth";
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 import { decrypt } from "@/lib/crypto/credentials";
 import { getProvider } from "@/lib/ai/provider-registry";
 
@@ -21,7 +21,7 @@ export async function POST(
     const { id } = await params;
 
     // Verify ownership
-    const connection = await db.orm.public.ProviderConnection
+    const connection = await (await getDb()).orm.public.ProviderConnection
       .where({ id, userId: user.id })
       .first();
 

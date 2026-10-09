@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { db } from "@nexus/database";
+import { getDb } from "@/lib/db-client";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -17,10 +17,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (!user.email) return false;
       
       // Upsert the user into the Prisma database
-      const existingUser = await db.orm.public.User.where({ email: user.email }).first();
+      const existingUser = await (await getDb()).orm.public.User.where({ email: user.email }).first();
       
       if (!existingUser) {
-        const newUser = await db.orm.public.User.create({
+        const newUser = await (await getDb()).orm.public.User.create({
           email: user.email,
           name: user.name || null,
         });
