@@ -39,7 +39,10 @@ export async function POST(req: NextRequest) {
     const userMessage = messages[messages.length - 1];
 
     // 3. Persist User Message
-    await createMessage(user.id, currentConversationId, userMessage.role, userMessage.content);
+    const userMetadata = userMessage.attachments && userMessage.attachments.length > 0
+      ? JSON.stringify({ attachments: userMessage.attachments })
+      : null;
+    await createMessage(user.id, currentConversationId, userMessage.role, userMessage.content, userMetadata);
     if (messages.length === 1 && userMessage.content) {
       let title = userMessage.content.trim().split('\n')[0];
       if (title.length > 40) title = title.substring(0, 40) + "...";

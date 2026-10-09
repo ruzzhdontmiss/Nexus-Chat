@@ -15,7 +15,32 @@ export async function GET(
       return NextResponse.json({ error: "Conversation not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ conversation });
+    // Map messages to include parsed metadata
+    const parsedConversation = {
+      ...conversation,
+      messages: conversation.messages?.map((msg: any) => {
+        let sources = undefined;
+        let attachments = undefined;
+        if (msg.metadata) {
+          try {
+            const parsed = JSON.parse(msg.metadata);
+            if (parsed.sources) sources = parsed.sources;
+            if (parsed.attachments) attachments = parsed.attachments;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        return {
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          sources,
+          attachments
+        };
+      })
+    };
+
+    return NextResponse.json({ conversation: parsedConversation });
   } catch (error: any) {
     if (error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
